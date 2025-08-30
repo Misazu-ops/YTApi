@@ -441,9 +441,8 @@ if __name__ == "__main__":
     # Start the Telegram bot
     import asyncio
 
-    # Run the bot startup
-    await telegram_app.start()
-    print("✅ Telegram bot started successfully!")
+    telegram_app.start()
+    print("f✅ Telegram bot started successfully!\nBot username: {bot.me.username}\nBot name: {bot.me.full_name}")
     print("🔌 Plugins loaded from plugins/ directory")
     
     # Start FastAPI server
