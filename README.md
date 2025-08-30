@@ -148,38 +148,6 @@ docker run -d \
   yt-dlp-api
 ```
 
-3. **Alternative: Run without Chrome data mounting:**
-```bash
-docker run -d \
-  --name yt-dlp-api \
-  -p 8000:8000 \
-  yt-dlp-api
-```
-
-4. **For different Chrome profile locations:**
-```bash
-# Windows (Chrome)
-docker run -d \
-  --name yt-dlp-api \
-  -p 8000:8000 \
-  -v "/c/Users/$(whoami)/AppData/Local/Google/Chrome/User Data:/home/appuser/.config/google-chrome:ro" \
-  yt-dlp-api
-
-# macOS (Chrome)
-docker run -d \
-  --name yt-dlp-api \
-  -p 8000:8000 \
-  -v "$HOME/Library/Application Support/Google/Chrome:/home/appuser/.config/google-chrome:ro" \
-  yt-dlp-api
-
-# Linux (Chromium)
-docker run -d \
-  --name yt-dlp-api \
-  -p 8000:8000 \
-  -v ~/.config/chromium:/home/appuser/.config/chromium:ro \
-  yt-dlp-api
-```
-
 **Note about Chrome data mounting:**
 - The Chrome data mounting allows yt-dlp to use your Chrome cookies for enhanced access to YouTube content
 - The `:ro` flag ensures the container can only read the data, not modify it
