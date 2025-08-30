@@ -213,12 +213,44 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "```\n"
             "?token=YOUR_TOKEN\n"
             "```\n\n"
-            "🎯 **Endpoints:**\n\n"
-            "**1. Video Info** `/info`\n"
+            "📊 **Rate Limits:**\n"
+            "• Data endpoints: 1000/day\n"
+            "• Search: Unlimited\n\n"
+            "Select an endpoint to view detailed documentation:",
+            reply_markup=InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton("🎥 Video Info", callback_data="api_info"),
+                    InlineKeyboardButton("🔍 Search", callback_data="api_search")
+                ],
+                [
+                    InlineKeyboardButton("📦 Batch Processing", callback_data="api_batch"),
+                    InlineKeyboardButton("📊 Rate Limit", callback_data="api_ratelimit")
+                ],
+                [
+                    InlineKeyboardButton("❤️ Health Check", callback_data="api_health")
+                ],
+                [
+                    InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")
+                ]
+            ])
+        )
+    
+    elif data == "api_info":
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🎥 **Video Info Endpoint**\n\n"
+            "**Endpoint:** `/info`\n"
+            "**Method:** `GET`\n"
+            "**Auth:** Token required\n\n"
+            "**Parameters:**\n"
+            "• `token` - Your API token\n"
+            "• `q` - YouTube URL or search query\n"
+            "• `max_results` - Max results (for search)\n\n"
+            "**Example Request:**\n"
             "```\n"
-            "GET /info?token=TOKEN&q=youtube_url\n"
-            "```\n"
-            "Returns:\n"
+            "GET /info?token=TOKEN&q=https://youtube.com/watch?v=ID\n"
+            "```\n\n"
+            "**Example Response:**\n"
             "```json\n"
             "{\n"
             "  \"query_type\": \"url\",\n"
@@ -231,15 +263,30 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "  \"url\": \"https://stream-url.com\",\n"
             "  \"time_taken\": \"1.2 sec\"\n"
             "}\n"
+            "```",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
+            ])
+        )
+    
+    elif data == "api_search":
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🔍 **Search Endpoint** (FREE)\n\n"
+            "**Endpoint:** `/search`\n"
+            "**Method:** `GET`\n"
+            "**Auth:** No token required\n\n"
+            "**Parameters:**\n"
+            "• `q` - Search query\n"
+            "• `max_results` - Number of results (1-20)\n\n"
+            "**Example Request:**\n"
+            "```\n"
+            "GET /search?q=python tutorial&max_results=5\n"
             "```\n\n"
-            "**2. Search Videos** `/search` (FREE)\n"
-            "```\n"
-            "GET /search?q=search_term&max_results=5\n"
-            "```\n"
-            "Returns:\n"
+            "**Example Response:**\n"
             "```json\n"
             "{\n"
-            "  \"query\": \"search term\",\n"
+            "  \"query\": \"python tutorial\",\n"
             "  \"results\": [{\n"
             "    \"title\": \"Video Title\",\n"
             "    \"video_id\": \"VIDEO_ID\",\n"
@@ -252,18 +299,61 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "  \"total_results\": 1,\n"
             "  \"time_taken\": \"0.8 sec\"\n"
             "}\n"
-            "```\n\n"
-            "**3. Batch Processing** `/batch-info`\n"
+            "```",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
+            ])
+        )
+    
+    elif data == "api_batch":
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "📦 **Batch Processing Endpoint**\n\n"
+            "**Endpoint:** `/batch-info`\n"
+            "**Method:** `POST`\n"
+            "**Auth:** Token required\n\n"
+            "**Parameters:**\n"
+            "• `token` - Your API token (query param)\n"
+            "• Request body: JSON array of URLs\n\n"
+            "**Example Request:**\n"
             "```\n"
             "POST /batch-info?token=TOKEN\n"
-            "Body: [\"url1\", \"url2\"]\n"
-            "```\n"
-            "Returns array of video info objects\n\n"
-            "**4. Rate Limit Status** `/rate-limit-status`\n"
+            "Content-Type: application/json\n\n"
+            "[\"https://youtube.com/watch?v=ID1\",\n"
+            " \"https://youtube.com/watch?v=ID2\"]\n"
+            "```\n\n"
+            "**Example Response:**\n"
+            "```json\n"
+            "{\n"
+            "  \"results\": [{\n"
+            "    \"url\": \"https://youtube.com/watch?v=ID1\",\n"
+            "    \"title\": \"Video Title\",\n"
+            "    \"duration\": 180,\n"
+            "    \"stream_url\": \"https://stream.com\"\n"
+            "  }],\n"
+            "  \"total_time\": \"2.5 sec\"\n"
+            "}\n"
+            "```\n\n"
+            "**Limit:** Max 5 URLs per request",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
+            ])
+        )
+    
+    elif data == "api_ratelimit":
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "📊 **Rate Limit Status Endpoint**\n\n"
+            "**Endpoint:** `/rate-limit-status`\n"
+            "**Method:** `GET`\n"
+            "**Auth:** Token required\n\n"
+            "**Parameters:**\n"
+            "• `token` - Your API token\n\n"
+            "**Example Request:**\n"
             "```\n"
             "GET /rate-limit-status?token=TOKEN\n"
-            "```\n"
-            "Returns:\n"
+            "```\n\n"
+            "**Example Response:**\n"
             "```json\n"
             "{\n"
             "  \"user_id\": 123456,\n"
@@ -271,14 +361,39 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "  \"requests_used\": 50,\n"
             "  \"requests_remaining\": 950,\n"
             "  \"reset_time\": \"Midnight UTC\",\n"
-            "  \"is_admin\": false\n"
+            "  \"is_admin\": false,\n"
+            "  \"auth_method\": \"token\"\n"
             "}\n"
             "```\n\n"
-            "📊 **Rate Limits:**\n"
-            "• Data endpoints: 1000/day\n"
-            "• Search: Unlimited",
+            "**Usage:** Monitor your daily quota",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
+                [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
+            ])
+        )
+    
+    elif data == "api_health":
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "❤️ **Health Check Endpoint**\n\n"
+            "**Endpoint:** `/health`\n"
+            "**Method:** `GET`\n"
+            "**Auth:** No token required\n\n"
+            "**Parameters:** None\n\n"
+            "**Example Request:**\n"
+            "```\n"
+            "GET /health\n"
+            "```\n\n"
+            "**Example Response:**\n"
+            "```json\n"
+            "{\n"
+            "  \"status\": \"ok\"\n"
+            "}\n"
+            "```\n\n"
+            "**Usage:** Check if API is running\n"
+            "**Response Time:** < 100ms\n"
+            "**Rate Limit:** None",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
         )
     
