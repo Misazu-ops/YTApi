@@ -2,15 +2,12 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import asyncio
-import string
-import random
-import redis
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import from main module
-from main import (
+# Import from tools module
+from tools import (
     redis_client, generate_token, is_admin, get_user_token, 
     set_user_token, revoke_user_token, get_user_request_count,
     set_user_request_count, increment_user_requests

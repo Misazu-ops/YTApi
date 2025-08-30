@@ -5,7 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import get_user_token, get_user_request_count, is_admin
+from tools import get_user_token, get_user_request_count, is_admin
 
 @Client.on_message(filters.command("status"))
 async def status_command(client: Client, message: Message):
