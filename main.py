@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query, BackgroundTasks, Request, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import yt_dlp
 import time
 import asyncio
