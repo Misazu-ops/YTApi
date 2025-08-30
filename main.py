@@ -447,7 +447,7 @@ if __name__ == "__main__":
     print("🔌 Plugins loaded from plugins/ directory")
     
     # Start FastAPI server
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 # Optional: Batch processing endpoint
 @app.post("/batch-info")
