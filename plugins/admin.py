@@ -1,7 +1,11 @@
 
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from telegram_bot import (
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from main import (
     redis_client, is_admin, get_user_token, revoke_user_token,
     get_user_request_count, set_user_request_count
 )
