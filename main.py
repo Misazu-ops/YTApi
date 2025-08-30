@@ -435,29 +435,39 @@ async def clear_cache():
 
 
 
+async def start_telegram_bot():
+    """Start Telegram bot"""
+    print("🤖 Starting Telegram bot...")
+    await telegram_app.start()
+    print(f"✅ Telegram bot started successfully!\nBot username: {telegram_app.me.username}\nBot name: {telegram_app.me.full_name}")
+    print("🔌 Plugins loaded from plugins/ directory")
+    await telegram_app.idle()
+
+async def start_fastapi_server():
+    """Start FastAPI server"""
+    print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
+
 async def start_services():
     """Start both Telegram bot and FastAPI server concurrently"""
     print("🚀 Starting YT-DLP API with Telegram Bot...")
     
-    # Start the Telegram bot in the background
-    await telegram_app.start()
-    print(f"✅ Telegram bot started successfully!\nBot username: {telegram_app.me.username}\nBot name: {telegram_app.me.full_name}")
-    print("🔌 Plugins loaded from plugins/ directory")
+    # Create tasks for both services
+    telegram_task = asyncio.create_task(start_telegram_bot())
+    fastapi_task = asyncio.create_task(start_fastapi_server())
     
-    # Create FastAPI server config
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
-    server = uvicorn.Server(config)
-    
-    print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
-    
-    # Run both services concurrently
-    await asyncio.gather(
-        telegram_app.idle(),  # Keep telegram bot running
-        server.serve()        # Start FastAPI server
-    )
+    # Wait for both tasks to complete
+    await asyncio.gather(telegram_task, fastapi_task)
 
 if __name__ == "__main__":
-    asyncio.run(start_services())
+    try:
+        asyncio.run(start_services())
+    except KeyboardInterrupt:
+        print("🛑 Services stopped by user")
+    except Exception as e:
+        print(f"❌ Error starting services: {e}")
 
 # Optional: Batch processing endpoint
 @app.post("/batch-info")
