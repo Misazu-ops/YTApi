@@ -40,10 +40,8 @@ telegram_app = Client(
     plugins=dict(root="plugins")
 )
 
-async def stop_bot():
-    """Stop the Telegram bot"""
-    await telegram_app.stop()
-    print("🛑 Telegram bot stopped")
+
+
 
 app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support and Telegram bot integration")
 
@@ -444,13 +442,11 @@ if __name__ == "__main__":
     
     # Start the Telegram bot
     import asyncio
-    async def start_telegram_bot():
-        await telegram_app.start()
-        print("✅ Telegram bot started successfully!")
-        print("🔌 Plugins loaded from plugins/ directory")
-    
+
     # Run the bot startup
-    asyncio.run(start_telegram_bot())
+    await telegram_app.start()
+    print("✅ Telegram bot started successfully!")
+    print("🔌 Plugins loaded from plugins/ directory")
     
     # Start FastAPI server
     uvicorn.run(app, host="0.0.0.0", port=5000)
