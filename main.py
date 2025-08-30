@@ -40,27 +40,6 @@ telegram_app = Client(
     plugins=dict(root="plugins")
 )
 
-async def start_bot():
-    """Start the Telegram bot"""
-    await telegram_app.start()
-    print("✅ Telegram bot started successfully!")
-    print("🔌 Plugins loaded from plugins/ directory")
-    
-    # Send startup message to channel
-    try:
-        await telegram_app.send_message(
-            CHANNEL, 
-            "🤖 YT-DLP API Bot is now online!\n\n"
-            "✨ Features:\n"
-            "• Interactive buttons\n"
-            "• Token management\n"
-            "• Usage tracking\n"
-            "• Admin panel\n\n"
-            "Use /start to get your API token!"
-        )
-    except Exception as e:
-        print(f"Could not send startup message: {e}")
-
 async def stop_bot():
     """Stop the Telegram bot"""
     await telegram_app.stop()
@@ -458,26 +437,22 @@ async def clear_cache():
     get_cached_search_results.cache_clear()
     return {"message": "All caches cleared"}
 
-@app.on_event("startup")
-async def startup_event():
-    """Start the Telegram bot when FastAPI starts"""
-    try:
-        await start_bot()
-        print("✅ FastAPI and Telegram bot started successfully!")
-    except Exception as e:
-        print(f"❌ Failed to start Telegram bot: {e}")
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Stop the Telegram bot when FastAPI shuts down"""
-    try:
-        await stop_bot()
-        print("✅ Telegram bot stopped successfully!")
-    except Exception as e:
-        print(f"❌ Error stopping Telegram bot: {e}")
 
 if __name__ == "__main__":
     print("🚀 Starting YT-DLP API with Telegram Bot...")
+    
+    # Start the Telegram bot
+    import asyncio
+    async def start_telegram_bot():
+        await telegram_app.start()
+        print("✅ Telegram bot started successfully!")
+        print("🔌 Plugins loaded from plugins/ directory")
+    
+    # Run the bot startup
+    asyncio.run(start_telegram_bot())
+    
+    # Start FastAPI server
     uvicorn.run(app, host="0.0.0.0", port=5000)
 
 # Optional: Batch processing endpoint
