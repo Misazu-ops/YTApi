@@ -109,16 +109,7 @@ Clear all caches (POST, no authentication required)
 pip install -r requirements.txt
 ```
 
-2. **Configure environment variables in main.py:**
-```python
-API_ID = your_telegram_api_id
-API_HASH = "your_telegram_api_hash"
-BOT_TOKEN = "your_bot_token"
-GROUP = "your_telegram_group"
-CHANNEL = "your_telegram_channel"
-```
-
-3. **Set up Redis connection in tools.py:**
+2. **Set up Redis connection in tools.py:**
 ```python
 redis_client = redis.Redis(
     host='your_redis_host',
@@ -128,13 +119,13 @@ redis_client = redis.Redis(
 )
 ```
 
-4. **Create admin.txt file with admin user IDs:**
+3. **Create admin.txt file with admin user IDs:**
 ```
 123456789
 987654321
 ```
 
-5. **Run the application:**
+4. **Run the application:**
 ```bash
 python main.py
 ```
@@ -148,16 +139,12 @@ The API will be available at `http://0.0.0.0:8000`
 docker build -t yt-dlp-api .
 ```
 
-2. **Run with Chrome data mounting (for cookie support):**
+2. **Run with Chrome data mounting (recommended for cookie support):**
 ```bash
 docker run -d \
   --name yt-dlp-api \
   -p 8000:8000 \
   -v ~/.config/google-chrome:/home/appuser/.config/google-chrome:ro \
-  -e API_ID=your_api_id \
-  -e API_HASH=your_api_hash \
-  -e BOT_TOKEN=your_bot_token \
-  -e REDIS_URL=redis://your_redis_host:6379 \
   yt-dlp-api
 ```
 
@@ -166,18 +153,59 @@ docker run -d \
 docker run -d \
   --name yt-dlp-api \
   -p 8000:8000 \
-  -e API_ID=your_api_id \
-  -e API_HASH=your_api_hash \
-  -e BOT_TOKEN=your_bot_token \
-  -e REDIS_URL=redis://your_redis_host:6379 \
+  yt-dlp-api
+```
+
+4. **For different Chrome profile locations:**
+```bash
+# Windows (Chrome)
+docker run -d \
+  --name yt-dlp-api \
+  -p 8000:8000 \
+  -v "/c/Users/$(whoami)/AppData/Local/Google/Chrome/User Data:/home/appuser/.config/google-chrome:ro" \
+  yt-dlp-api
+
+# macOS (Chrome)
+docker run -d \
+  --name yt-dlp-api \
+  -p 8000:8000 \
+  -v "$HOME/Library/Application Support/Google/Chrome:/home/appuser/.config/google-chrome:ro" \
+  yt-dlp-api
+
+# Linux (Chromium)
+docker run -d \
+  --name yt-dlp-api \
+  -p 8000:8000 \
+  -v ~/.config/chromium:/home/appuser/.config/chromium:ro \
   yt-dlp-api
 ```
 
 **Note about Chrome data mounting:**
-- The `-v ~/.config/google-chrome:/home/appuser/.config/google-chrome:ro` flag mounts your local Chrome profile data (read-only) into the container
-- This allows yt-dlp to use your Chrome cookies for enhanced access to YouTube content
-- Make sure Chrome is installed on your host system and you're logged into your accounts
+- The Chrome data mounting allows yt-dlp to use your Chrome cookies for enhanced access to YouTube content
 - The `:ro` flag ensures the container can only read the data, not modify it
+- Make sure Chrome/Chromium is installed on your host system and you're logged into your accounts
+- This is particularly useful for accessing age-restricted or region-locked content
+- Without Chrome data, the API will still work but with limited access to some YouTube content
+
+**Docker Management Commands:**
+```bash
+# View logs
+docker logs yt-dlp-api
+
+# Stop the container
+docker stop yt-dlp-api
+
+# Start the container
+docker start yt-dlp-api
+
+# Remove the container
+docker rm yt-dlp-api
+
+# Update and restart
+docker stop yt-dlp-api && docker rm yt-dlp-api
+docker build -t yt-dlp-api .
+docker run -d --name yt-dlp-api -p 8000:8000 -v ~/.config/google-chrome:/home/appuser/.config/google-chrome:ro yt-dlp-api
+```
 
 ## Authentication
 
