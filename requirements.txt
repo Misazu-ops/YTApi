@@ -3,3 +3,6 @@ fastapi
 uvicorn[standard]
 yt-dlp
 python-multipart
+pyrogram
+tgcrypto
+redis
