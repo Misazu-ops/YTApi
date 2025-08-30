@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, BackgroundTasks, Request, HTTPException
+from fastapi import FastAPI, Query, BackgroundTasks, Request, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.base import BaseHTTPMiddleware
 import yt_dlp
@@ -10,33 +10,74 @@ import logging
 import re
 from collections import defaultdict
 import datetime
+from telegram_bot import start_bot, stop_bot, get_user_by_token, is_admin, increment_user_requests, get_user_request_count
+from typing import Optional
 
-app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support")
+app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support and Telegram bot integration")
 
-# Rate limiting storage - tracks daily requests per IP
+# Rate limiting storage - tracks daily requests per IP (fallback)
 daily_request_counts = defaultdict(lambda: {"count": 0, "date": datetime.date.today()})
 DAILY_LIMIT = 1000
+ADMIN_LIMIT = 10000
+
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    """Get current user from token"""
+    if not authorization:
+        return None
+    
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            return None
+        
+        user_id = get_user_by_token(token)
+        return user_id
+    except:
+        return None
+
+async def require_token(authorization: Optional[str] = Header(None)):
+    """Require valid token for protected endpoints"""
+    user_id = await get_current_user(authorization)
+    if not user_id:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "Token required",
+                "message": "Please get your token from @YourBotUsername on Telegram using /start command"
+            }
+        )
+    return user_id
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip rate limiting for search endpoints and health check
-        if request.url.path in ["/search", "/health", "/clear-cache"]:
+        if request.url.path in ["/search", "/health", "/clear-cache", "/rate-limit-status"]:
             return await call_next(request)
         
-        client_ip = request.client.host
-        today = datetime.date.today()
+        # Check for token authentication
+        authorization = request.headers.get("authorization")
+        user_id = await get_current_user(authorization)
         
-        # Reset counter if it's a new day
-        if daily_request_counts[client_ip]["date"] != today:
-            daily_request_counts[client_ip] = {"count": 0, "date": today}
+        if not user_id:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": "Token required",
+                    "message": "Please get your token from the Telegram bot using /start command"
+                }
+            )
+        
+        # Get user's request count and limit
+        request_count = await get_user_request_count(user_id)
+        user_limit = ADMIN_LIMIT if is_admin(user_id) else DAILY_LIMIT
         
         # Check if user has exceeded daily limit
-        if daily_request_counts[client_ip]["count"] >= DAILY_LIMIT:
+        if request_count >= user_limit:
             return JSONResponse(
                 status_code=429,
                 content={
                     "error": "Daily limit exceeded",
-                    "message": f"You have exceeded the daily limit of {DAILY_LIMIT} requests. Search functionality remains free.",
+                    "message": f"You have exceeded your daily limit of {user_limit} requests. Search functionality remains free.",
                     "remaining_requests": 0,
                     "reset_time": "Resets at midnight UTC"
                 }
@@ -47,13 +88,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
         # Increment counter only for successful data requests (not errors)
         if response.status_code == 200:
-            daily_request_counts[client_ip]["count"] += 1
-        
-        # Add rate limit headers to response
-        remaining = DAILY_LIMIT - daily_request_counts[client_ip]["count"]
-        response.headers["X-RateLimit-Limit"] = str(DAILY_LIMIT)
-        response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
-        response.headers["X-RateLimit-Reset"] = str(int((datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time.min).timestamp())))
+            new_count = await increment_user_requests(user_id)
+            remaining = user_limit - new_count
+            
+            # Add rate limit headers to response
+            response.headers["X-RateLimit-Limit"] = str(user_limit)
+            response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
+            response.headers["X-RateLimit-Reset"] = str(int((datetime.datetime.combine(datetime.date.today() + datetime.timedelta(days=1), datetime.time.min).timestamp())))
         
         return response
 
@@ -181,7 +222,8 @@ def extract_best_format_url(formats):
 @app.get("/info")
 async def video_info(
     q: str = Query(..., description="YouTube video URL or search query"),
-    max_results: int = Query(1, description="Max results for search queries", ge=1, le=10)
+    max_results: int = Query(1, description="Max results for search queries", ge=1, le=10),
+    user_id: int = Depends(require_token)
 ):
     start_time = time.time()
     
@@ -332,25 +374,28 @@ async def health_check():
     return {"status": "ok"}
 
 @app.get("/rate-limit-status")
-async def rate_limit_status(request: Request):
-    """Check current rate limit status for the requesting IP"""
-    client_ip = request.client.host
-    today = datetime.date.today()
-    
-    # Reset counter if it's a new day
-    if daily_request_counts[client_ip]["date"] != today:
-        daily_request_counts[client_ip] = {"count": 0, "date": today}
-    
-    used = daily_request_counts[client_ip]["count"]
-    remaining = DAILY_LIMIT - used
-    
-    return {
-        "daily_limit": DAILY_LIMIT,
-        "requests_used": used,
-        "requests_remaining": max(0, remaining),
-        "reset_time": "Resets at midnight UTC",
-        "client_ip": client_ip
-    }
+async def rate_limit_status(user_id: Optional[int] = Depends(get_current_user)):
+    """Check current rate limit status"""
+    if user_id:
+        # Token-based user
+        used = await get_user_request_count(user_id)
+        limit = ADMIN_LIMIT if is_admin(user_id) else DAILY_LIMIT
+        
+        return {
+            "user_id": user_id,
+            "daily_limit": limit,
+            "requests_used": used,
+            "requests_remaining": max(0, limit - used),
+            "reset_time": "Resets at midnight UTC",
+            "is_admin": is_admin(user_id),
+            "auth_method": "token"
+        }
+    else:
+        return {
+            "error": "No token provided",
+            "message": "Please get your token from the Telegram bot using /start command",
+            "auth_method": "none"
+        }
 
 # Optional: Clear cache endpoint
 @app.post("/clear-cache")
@@ -360,9 +405,27 @@ async def clear_cache():
     get_cached_search_results.cache_clear()
     return {"message": "All caches cleared"}
 
+@app.on_event("startup")
+async def startup_event():
+    """Start the Telegram bot when FastAPI starts"""
+    try:
+        await start_bot()
+        print("✅ FastAPI and Telegram bot started successfully!")
+    except Exception as e:
+        print(f"❌ Failed to start Telegram bot: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop the Telegram bot when FastAPI shuts down"""
+    try:
+        await stop_bot()
+        print("✅ Telegram bot stopped successfully!")
+    except Exception as e:
+        print(f"❌ Error stopping Telegram bot: {e}")
+
 # Optional: Batch processing endpoint
 @app.post("/batch-info")
-async def batch_video_info(urls: list[str]):
+async def batch_video_info(urls: list[str], user_id: int = Depends(require_token)):
     """Process multiple URLs concurrently"""
     start_time = time.time()
     

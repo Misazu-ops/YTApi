@@ -1,0 +1,11 @@
+[workflows]
+runButton = "Start API with Bot"
+
+[[workflows.workflow]]
+name = "Start API with Bot"
+author = 47048027
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
