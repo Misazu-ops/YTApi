@@ -12,6 +12,7 @@ from collections import defaultdict
 import datetime
 from telegram_bot import start_bot, stop_bot, get_user_by_token, is_admin, increment_user_requests, get_user_request_count
 from typing import Optional
+import uvicorn
 
 app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support and Telegram bot integration")
 
@@ -422,6 +423,10 @@ async def shutdown_event():
         print("✅ Telegram bot stopped successfully!")
     except Exception as e:
         print(f"❌ Error stopping Telegram bot: {e}")
+
+if __name__ == "__main__":
+    print("🚀 Starting YT-DLP API with Telegram Bot...")
+    uvicorn.run(app, host="0.0.0.0", port=5000)
 
 # Optional: Batch processing endpoint
 @app.post("/batch-info")
