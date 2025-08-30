@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Query, BackgroundTasks
+from fastapi import FastAPI, Query, BackgroundTasks, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.base import BaseHTTPMiddleware
 import yt_dlp
 import time
 import asyncio
@@ -7,8 +8,57 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 import logging
 import re
+from collections import defaultdict
+import datetime
 
 app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support")
+
+# Rate limiting storage - tracks daily requests per IP
+daily_request_counts = defaultdict(lambda: {"count": 0, "date": datetime.date.today()})
+DAILY_LIMIT = 1000
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Skip rate limiting for search endpoints and health check
+        if request.url.path in ["/search", "/health", "/clear-cache"]:
+            return await call_next(request)
+        
+        client_ip = request.client.host
+        today = datetime.date.today()
+        
+        # Reset counter if it's a new day
+        if daily_request_counts[client_ip]["date"] != today:
+            daily_request_counts[client_ip] = {"count": 0, "date": today}
+        
+        # Check if user has exceeded daily limit
+        if daily_request_counts[client_ip]["count"] >= DAILY_LIMIT:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Daily limit exceeded",
+                    "message": f"You have exceeded the daily limit of {DAILY_LIMIT} requests. Search functionality remains free.",
+                    "remaining_requests": 0,
+                    "reset_time": "Resets at midnight UTC"
+                }
+            )
+        
+        # Process the request
+        response = await call_next(request)
+        
+        # Increment counter only for successful data requests (not errors)
+        if response.status_code == 200:
+            daily_request_counts[client_ip]["count"] += 1
+        
+        # Add rate limit headers to response
+        remaining = DAILY_LIMIT - daily_request_counts[client_ip]["count"]
+        response.headers["X-RateLimit-Limit"] = str(DAILY_LIMIT)
+        response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
+        response.headers["X-RateLimit-Reset"] = str(int((datetime.datetime.combine(today + datetime.timedelta(days=1), datetime.time.min).timestamp())))
+        
+        return response
+
+# Add the rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 # Thread pool for CPU-bound operations
 executor = ThreadPoolExecutor(max_workers=4)
@@ -230,7 +280,7 @@ async def search_videos(
     q: str = Query(..., description="Search query"),
     max_results: int = Query(5, description="Number of results to return", ge=1, le=20)
 ):
-    """Search YouTube videos without getting detailed info"""
+    """Search YouTube videos without getting detailed info - FREE (no rate limit)"""
     start_time = time.time()
     
     try:
@@ -280,6 +330,27 @@ async def search_videos(
 async def health_check():
     """Quick health check endpoint"""
     return {"status": "ok"}
+
+@app.get("/rate-limit-status")
+async def rate_limit_status(request: Request):
+    """Check current rate limit status for the requesting IP"""
+    client_ip = request.client.host
+    today = datetime.date.today()
+    
+    # Reset counter if it's a new day
+    if daily_request_counts[client_ip]["date"] != today:
+        daily_request_counts[client_ip] = {"count": 0, "date": today}
+    
+    used = daily_request_counts[client_ip]["count"]
+    remaining = DAILY_LIMIT - used
+    
+    return {
+        "daily_limit": DAILY_LIMIT,
+        "requests_used": used,
+        "requests_remaining": max(0, remaining),
+        "reset_time": "Resets at midnight UTC",
+        "client_ip": client_ip
+    }
 
 # Optional: Clear cache endpoint
 @app.post("/clear-cache")
