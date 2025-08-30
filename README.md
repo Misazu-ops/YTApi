@@ -241,13 +241,9 @@ FROM python:3.9-slim-buster
 
 WORKDIR /app
 
-# Install Chrome browser for cookie support and other dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
-    wget \
-    gnupg \
-    ca-certificates \
-    google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
