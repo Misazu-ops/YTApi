@@ -435,18 +435,29 @@ async def clear_cache():
 
 
 
-if __name__ == "__main__":
+async def start_services():
+    """Start both Telegram bot and FastAPI server concurrently"""
     print("🚀 Starting YT-DLP API with Telegram Bot...")
     
-    # Start the Telegram bot
-    import asyncio
-
-    telegram_app.start()
+    # Start the Telegram bot in the background
+    await telegram_app.start()
     print(f"✅ Telegram bot started successfully!\nBot username: {telegram_app.me.username}\nBot name: {telegram_app.me.full_name}")
     print("🔌 Plugins loaded from plugins/ directory")
     
-    # Start FastAPI server
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Create FastAPI server config
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
+    server = uvicorn.Server(config)
+    
+    print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
+    
+    # Run both services concurrently
+    await asyncio.gather(
+        telegram_app.idle(),  # Keep telegram bot running
+        server.serve()        # Start FastAPI server
+    )
+
+if __name__ == "__main__":
+    asyncio.run(start_services())
 
 # Optional: Batch processing endpoint
 @app.post("/batch-info")
