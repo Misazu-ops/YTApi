@@ -36,7 +36,7 @@ telegram_app = Client(
     "ytdlp_bot", 
     api_id=API_ID, 
     api_hash=API_HASH, 
-    bot_token=BOT_TOKEN,
+    bot_token=BOT_TOKEN,in_memory=True,
     plugins=dict(root="plugins")
 )
 
@@ -442,7 +442,7 @@ if __name__ == "__main__":
     import asyncio
 
     telegram_app.start()
-    print("f✅ Telegram bot started successfully!\nBot username: {bot.me.username}\nBot name: {bot.me.full_name}")
+    print(f"✅ Telegram bot started successfully!\nBot username: {telegram_app.me.username}\nBot name: {telegram_app.me.full_name}")
     print("🔌 Plugins loaded from plugins/ directory")
     
     # Start FastAPI server
