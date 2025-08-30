@@ -1,7 +1,9 @@
 fastapi
+setuptools
 uvicorn[standard]
 yt-dlp
-python-multipart
 kurigram
-tgcrypto
 redis
+tgcrypto
+python-ffmpeg
+ffmpeg

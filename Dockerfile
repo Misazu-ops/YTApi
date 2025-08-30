@@ -1,5 +1,5 @@
 
-FROM python:3.13.2-slim
+FROM python:3.13.2
 
 # Set working directory
 WORKDIR /app
@@ -7,6 +7,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
@@ -17,10 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY tools.py .
 COPY plugins/ ./plugins/
-
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
 
 # Expose port (FastAPI runs on port 8000 based on main.py)
 EXPOSE 8000

@@ -136,16 +136,12 @@ The API will be available at `http://0.0.0.0:8000`
 
 1. **Build the Docker image:**
 ```bash
-docker build -t yt-dlp-api .
+docker build --no-cache -t yt-dlp-api .
 ```
 
 2. **Run with Chrome data mounting (recommended for cookie support):**
 ```bash
-docker run -d \
-  --name yt-dlp-api \
-  -p 8000:8000 \
-  -v ~/.config/google-chrome:/home/appuser/.config/google-chrome:ro \
-  yt-dlp-api
+docker run -d --name yt-dlp-api -p 8000:8000 --mount type=bind,source=$HOME/.config/google-chrome,target=/root/.config/google-chrome yt-dlp-api
 ```
 
 **Note about Chrome data mounting:**
