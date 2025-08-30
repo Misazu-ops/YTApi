@@ -1,4 +1,3 @@
-
 # yt-dlp API with Telegram Bot
 
 A FastAPI-based web service that provides an optimized interface to yt-dlp for extracting YouTube video information with cookies support and integrated Telegram bot for token management.
@@ -236,3 +235,34 @@ The API includes comprehensive error handling:
 
 MIT License
 
+# Dockerfile
+
+FROM python:3.9-slim-buster
+
+WORKDIR /app
+
+# Install Chrome browser for cookie support and other dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg \
+    ca-certificates \
+    google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code
+COPY . .
+
+# Expose port (FastAPI runs on port 8000)
+EXPOSE 8000
+
+# Health check for FastAPI endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the application (both FastAPI and Telegram bot)
+CMD ["python3", "main.py"]
