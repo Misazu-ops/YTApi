@@ -436,20 +436,7 @@ async def clear_cache():
 
 
 
-def start_services():
-    print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info",loop="asyncio")
 
-if __name__ == "__main__":
-    try:
-        threading.Thread(target=start_services).start()
-        telegram_app.run()
-    except KeyboardInterrupt:
-        print("🛑 Services stopped by user")
-    except Exception as e:
-        print(f"❌ Error starting services: {e}")
-
-# Optional: Batch processing endpoint
 @app.post("/batch-info")
 async def batch_video_info(urls: list[str], token: str = Query(..., description="Your API token"), user_id: int = Depends(require_token)):
     """Process multiple URLs concurrently"""
@@ -495,3 +482,17 @@ async def batch_video_info(urls: list[str], token: str = Query(..., description=
             },
             status_code=400
         )
+
+
+def start_services():
+    print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info",loop="asyncio")
+
+if __name__ == "__main__":
+    try:
+        threading.Thread(target=start_services).start()
+        telegram_app.run()
+    except KeyboardInterrupt:
+        print("🛑 Services stopped by user")
+    except Exception as e:
+        print(f"❌ Error starting services: {e}")
