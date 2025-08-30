@@ -38,8 +38,8 @@ async def start_command(client: Client, message: Message):
             f"✅ Your API is ready to use!\n"
             f"🔗 Token: `{existing_token}`\n\n"
             f"📝 **Usage:**\n"
-            f"Add this header to your API requests:\n"
-            f"`Authorization: Bearer {existing_token}`\n\n"
+            f"Add your token as a query parameter:\n"
+            f"`?token={existing_token}`\n\n"
             f"📈 **Daily Limit:** 1000 requests\n"
             f"🔍 **Search:** Always free!",
             reply_markup=keyboard
@@ -53,8 +53,8 @@ async def start_command(client: Client, message: Message):
             f"🎉 **Welcome to YT-DLP API, {username}!**\n\n"
             f"🔑 Your API token: `{new_token}`\n\n"
             f"📝 **How to use:**\n"
-            f"Add this header to your API requests:\n"
-            f"`Authorization: Bearer {new_token}`\n\n"
+            f"Add your token as a query parameter:\n"
+            f"`?token={new_token}`\n\n"
             f"📈 **Daily Limit:** 1000 requests\n"
             f"🔍 **Search:** Always free!\n\n"
             f"🚀 **Get started:** Use the buttons below!",
@@ -97,7 +97,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 f"`{token}`\n\n"
                 f"📝 **Usage:**\n"
                 f"```\n"
-                f"Authorization: Bearer {token}\n"
+                f"?token={token}\n"
                 f"```\n\n"
                 f"⚠️ Keep this token secure!",
                 reply_markup=InlineKeyboardMarkup([
@@ -190,7 +190,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `/batch-info` - Process multiple URLs\n"
             "• `/health` - Health check\n\n"
             "📝 **Usage:**\n"
-            "Add header: `Authorization: Bearer YOUR_TOKEN`",
+            "Add query parameter: `?token=YOUR_TOKEN`",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📖 API Docs", callback_data="api_docs")],
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
@@ -202,15 +202,14 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         await callback_query.edit_message_text(
             "📖 **API Documentation**\n\n"
             "🔗 **Base URL:** Your Repl URL\n\n"
-            "📝 **Headers:**\n"
+            "📝 **Authentication:**\n"
             "```\n"
-            "Authorization: Bearer YOUR_TOKEN\n"
-            "Content-Type: application/json\n"
+            "?token=YOUR_TOKEN\n"
             "```\n\n"
             "🎯 **Examples:**\n"
-            "• `GET /info?q=youtube_url`\n"
+            "• `GET /info?token=YOUR_TOKEN&q=youtube_url`\n"
             "• `GET /search?q=search_term&max_results=5`\n"
-            "• `POST /batch-info` (JSON array of URLs)\n\n"
+            "• `POST /batch-info?token=YOUR_TOKEN` (JSON array of URLs)\n\n"
             "📊 **Rate Limits:**\n"
             "• Data endpoints: 1000/day\n"
             "• Search: Unlimited",

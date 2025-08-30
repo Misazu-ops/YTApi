@@ -50,30 +50,26 @@ daily_request_counts = defaultdict(lambda: {"count": 0, "date": datetime.date.to
 DAILY_LIMIT = 1000
 ADMIN_LIMIT = 10000
 
-async def get_current_user(authorization: Optional[str] = Header(None)):
+async def get_current_user(token: Optional[str] = Query(None)):
     """Get current user from token"""
-    if not authorization:
+    if not token:
         return None
     
     try:
-        scheme, token = authorization.split()
-        if scheme.lower() != "bearer":
-            return None
-        
         user_id = get_user_by_token(token)
         return user_id
     except:
         return None
 
-async def require_token(authorization: Optional[str] = Header(None)):
+async def require_token(token: Optional[str] = Query(None, description="Your API token")):
     """Require valid token for protected endpoints"""
-    user_id = await get_current_user(authorization)
+    user_id = await get_current_user(token)
     if not user_id:
         raise HTTPException(
             status_code=401,
             detail={
                 "error": "Token required",
-                "message": "Please get your token from @YourBotUsername on Telegram using /start command"
+                "message": "Please get your token from the Telegram bot using /start command and add it as ?token=YOUR_TOKEN"
             }
         )
     return user_id
@@ -84,16 +80,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if request.url.path in ["/search", "/health", "/clear-cache", "/rate-limit-status"]:
             return await call_next(request)
         
-        # Check for token authentication
-        authorization = request.headers.get("authorization")
-        user_id = await get_current_user(authorization)
+        # Check for token authentication from query parameter
+        token = request.query_params.get("token")
+        user_id = await get_current_user(token)
         
         if not user_id:
             return JSONResponse(
                 status_code=401,
                 content={
                     "error": "Token required",
-                    "message": "Please get your token from the Telegram bot using /start command"
+                    "message": "Please get your token from the Telegram bot using /start command and add it as ?token=YOUR_TOKEN"
                 }
             )
         
@@ -253,6 +249,7 @@ def extract_best_format_url(formats):
 async def video_info(
     q: str = Query(..., description="YouTube video URL or search query"),
     max_results: int = Query(1, description="Max results for search queries", ge=1, le=10),
+    token: str = Query(..., description="Your API token"),
     user_id: int = Depends(require_token)
 ):
     start_time = time.time()
@@ -404,8 +401,9 @@ async def health_check():
     return {"status": "ok"}
 
 @app.get("/rate-limit-status")
-async def rate_limit_status(user_id: Optional[int] = Depends(get_current_user)):
+async def rate_limit_status(token: Optional[str] = Query(None, description="Your API token")):
     """Check current rate limit status"""
+    user_id = await get_current_user(token)
     if user_id:
         # Token-based user
         used = await get_user_request_count(user_id)
@@ -423,7 +421,7 @@ async def rate_limit_status(user_id: Optional[int] = Depends(get_current_user)):
     else:
         return {
             "error": "No token provided",
-            "message": "Please get your token from the Telegram bot using /start command",
+            "message": "Please get your token from the Telegram bot using /start command and add it as ?token=YOUR_TOKEN",
             "auth_method": "none"
         }
 
@@ -453,7 +451,7 @@ if __name__ == "__main__":
 
 # Optional: Batch processing endpoint
 @app.post("/batch-info")
-async def batch_video_info(urls: list[str], user_id: int = Depends(require_token)):
+async def batch_video_info(urls: list[str], token: str = Query(..., description="Your API token"), user_id: int = Depends(require_token)):
     """Process multiple URLs concurrently"""
     start_time = time.time()
     
