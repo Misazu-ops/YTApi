@@ -12,10 +12,11 @@ from collections import defaultdict
 import datetime
 from typing import Optional
 import uvicorn
+import threading
 import redis
 import string
 import random
-from pyrogram import Client
+from pyrogram import Client,idle
 
 # Telegram Bot Configuration
 API_ID = 21869707
@@ -435,35 +436,14 @@ async def clear_cache():
 
 
 
-async def start_telegram_bot():
-    """Start Telegram bot"""
-    print("🤖 Starting Telegram bot...")
-    await telegram_app.start()
-    print(f"✅ Telegram bot started successfully!\nBot username: {telegram_app.me.username}\nBot name: {telegram_app.me.full_name}")
-    print("🔌 Plugins loaded from plugins/ directory")
-    await telegram_app.idle()
-
-async def start_fastapi_server():
-    """Start FastAPI server"""
+def start_services():
     print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="info")
-    server = uvicorn.Server(config)
-    await server.serve()
-
-async def start_services():
-    """Start both Telegram bot and FastAPI server concurrently"""
-    print("🚀 Starting YT-DLP API with Telegram Bot...")
-    
-    # Create tasks for both services
-    telegram_task = asyncio.create_task(start_telegram_bot())
-    fastapi_task = asyncio.create_task(start_fastapi_server())
-    
-    # Wait for both tasks to complete
-    await asyncio.gather(telegram_task, fastapi_task)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info",loop="asyncio")
 
 if __name__ == "__main__":
     try:
-        asyncio.run(start_services())
+        threading.Thread(target=start_services).start()
+        telegram_app.run()
     except KeyboardInterrupt:
         print("🛑 Services stopped by user")
     except Exception as e:
