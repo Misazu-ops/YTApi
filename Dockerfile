@@ -15,9 +15,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY main.py .
-COPY tools.py .
-COPY plugins/ ./plugins/
+COPY . .
 
 # Expose port (FastAPI runs on port 8000 based on main.py)
 EXPOSE 8000
