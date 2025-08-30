@@ -61,6 +61,8 @@ Clear all caches (POST, no authentication required)
 
 ## Installation & Setup
 
+### Local Installation
+
 1. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
@@ -78,6 +80,44 @@ python main.py
 ```
 
 The API will be available at `http://0.0.0.0:8000`
+
+### Docker Installation
+
+1. **Build the Docker image:**
+```bash
+docker build -t yt-dlp-api .
+```
+
+2. **Run with Chrome data mounting (for cookie support):**
+```bash
+docker run -d \
+  --name yt-dlp-api \
+  -p 8000:8000 \
+  -v ~/.config/google-chrome:/home/appuser/.config/google-chrome:ro \
+  -e API_ID=your_api_id \
+  -e API_HASH=your_api_hash \
+  -e BOT_TOKEN=your_bot_token \
+  -e REDIS_URL=redis://your_redis_host:6379 \
+  yt-dlp-api
+```
+
+3. **Alternative: Run without Chrome data mounting:**
+```bash
+docker run -d \
+  --name yt-dlp-api \
+  -p 8000:8000 \
+  -e API_ID=your_api_id \
+  -e API_HASH=your_api_hash \
+  -e BOT_TOKEN=your_bot_token \
+  -e REDIS_URL=redis://your_redis_host:6379 \
+  yt-dlp-api
+```
+
+**Note about Chrome data mounting:**
+- The `-v ~/.config/google-chrome:/home/appuser/.config/google-chrome:ro` flag mounts your local Chrome profile data (read-only) into the container
+- This allows yt-dlp to use your Chrome cookies for enhanced access to YouTube content
+- Make sure Chrome is installed on your host system and you're logged into your accounts
+- The `:ro` flag ensures the container can only read the data, not modify it
 
 ## Authentication
 
