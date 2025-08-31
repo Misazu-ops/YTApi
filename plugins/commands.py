@@ -41,7 +41,7 @@ async def start_command(client: Client, message: Message):
             f"`http://api.nub-coder.tech/`\n\n"
             f"📝 **Usage:**\n"
             f"Add your token as a query parameter:\n"
-            f"`?token={existing_token}`\n\n"
+            f"`http://api.nub-coder.tech/info?token={existing_token}&q=VIDEO_URL`\n\n"
             f"📈 **Daily Limit:** 1000 requests\n"
             f"🔍 **Search:** Always free!",
             reply_markup=keyboard
@@ -58,7 +58,7 @@ async def start_command(client: Client, message: Message):
             f"`http://api.nub-coder.tech/`\n\n"
             f"📝 **How to use:**\n"
             f"Add your token as a query parameter:\n"
-            f"`?token={new_token}`\n\n"
+            f"`http://api.nub-coder.tech/info?token={new_token}&q=VIDEO_URL`\n\n"
             f"📈 **Daily Limit:** 1000 requests\n"
             f"🔍 **Search:** Always free!\n\n"
             f"🚀 **Get started:** Use the buttons below!",
@@ -101,7 +101,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 f"`{token}`\n\n"
                 f"📝 **Usage:**\n"
                 f"```\n"
-                f"?token={token}\n"
+                f"http://api.nub-coder.tech/info?token={token}&q=VIDEO_URL\n"
                 f"```\n\n"
                 f"⚠️ Keep this token secure!",
                 reply_markup=InlineKeyboardMarkup([
@@ -196,7 +196,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `/batch-info` - Process multiple URLs\n"
             "• `/health` - Health check\n\n"
             "📝 **Usage:**\n"
-            "Add query parameter: `?token=YOUR_TOKEN`",
+            "Example: `http://api.nub-coder.tech/info?token=YOUR_TOKEN&q=VIDEO_URL`",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📖 API Docs", callback_data="api_docs")],
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
@@ -281,7 +281,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `max_results` - Number of results (1-20)\n\n"
             "**Example Request:**\n"
             "```\n"
-            "GET http://api.nub-coder.tech/search?q=python tutorial&max_results=5\n"
+            "GET http://api.nub-coder.tech/search?q=python%20tutorial&max_results=5\n"
             "```\n\n"
             "**Example Response:**\n"
             "```json\n"
