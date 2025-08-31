@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Query, BackgroundTasks, Request, HTTPException, Header, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import yt_dlp
 import time
@@ -45,6 +45,11 @@ telegram_app = Client(
 
 
 app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support and Telegram bot integration")
+
+@app.get("/")
+async def read_root():
+    """Serve the main webpage"""
+    return FileResponse("index.html")
 
 # Rate limiting storage - tracks daily requests per IP (fallback)
 daily_request_counts = defaultdict(lambda: {"count": 0, "date": datetime.date.today()})
