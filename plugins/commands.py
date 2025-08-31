@@ -239,7 +239,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         await callback_query.answer()
         await callback_query.edit_message_text(
             "🎥 **Video Info Endpoint**\n\n"
-            "**Endpoint:** `/info`\n"
+            "**Endpoint:** `http://api.nub-coder.tech/info`\n"
             "**Method:** `GET`\n"
             "**Auth:** Token required\n\n"
             "**Parameters:**\n"
@@ -248,7 +248,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `max_results` - Max results (for search)\n\n"
             "**Example Request:**\n"
             "```\n"
-            "GET /info?token=TOKEN&q=https://youtube.com/watch?v=ID\n"
+            "GET http://api.nub-coder.tech/info?token=TOKEN&q=https://youtube.com/watch?v=ID\n"
             "```\n\n"
             "**Example Response:**\n"
             "```json\n"
@@ -273,7 +273,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         await callback_query.answer()
         await callback_query.edit_message_text(
             "🔍 **Search Endpoint** (FREE)\n\n"
-            "**Endpoint:** `/search`\n"
+            "**Endpoint:** `http://api.nub-coder.tech/search`\n"
             "**Method:** `GET`\n"
             "**Auth:** No token required\n\n"
             "**Parameters:**\n"
@@ -281,7 +281,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `max_results` - Number of results (1-20)\n\n"
             "**Example Request:**\n"
             "```\n"
-            "GET /search?q=python tutorial&max_results=5\n"
+            "GET http://api.nub-coder.tech/search?q=python tutorial&max_results=5\n"
             "```\n\n"
             "**Example Response:**\n"
             "```json\n"
@@ -309,7 +309,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         await callback_query.answer()
         await callback_query.edit_message_text(
             "📦 **Batch Processing Endpoint**\n\n"
-            "**Endpoint:** `/batch-info`\n"
+            "**Endpoint:** `http://api.nub-coder.tech/batch-info`\n"
             "**Method:** `POST`\n"
             "**Auth:** Token required\n\n"
             "**Parameters:**\n"
@@ -317,7 +317,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• Request body: JSON array of URLs\n\n"
             "**Example Request:**\n"
             "```\n"
-            "POST /batch-info?token=TOKEN\n"
+            "POST http://api.nub-coder.tech/batch-info?token=TOKEN\n"
             "Content-Type: application/json\n\n"
             "[\"https://youtube.com/watch?v=ID1\",\n"
             " \"https://youtube.com/watch?v=ID2\"]\n"
@@ -344,14 +344,14 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         await callback_query.answer()
         await callback_query.edit_message_text(
             "📊 **Rate Limit Status Endpoint**\n\n"
-            "**Endpoint:** `/rate-limit-status`\n"
+            "**Endpoint:** `http://api.nub-coder.tech/rate-limit-status`\n"
             "**Method:** `GET`\n"
             "**Auth:** Token required\n\n"
             "**Parameters:**\n"
             "• `token` - Your API token\n\n"
             "**Example Request:**\n"
             "```\n"
-            "GET /rate-limit-status?token=TOKEN\n"
+            "GET http://api.nub-coder.tech/rate-limit-status?token=TOKEN\n"
             "```\n\n"
             "**Example Response:**\n"
             "```json\n"
@@ -375,13 +375,13 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         await callback_query.answer()
         await callback_query.edit_message_text(
             "❤️ **Health Check Endpoint**\n\n"
-            "**Endpoint:** `/health`\n"
+            "**Endpoint:** `http://api.nub-coder.tech/health`\n"
             "**Method:** `GET`\n"
             "**Auth:** No token required\n\n"
             "**Parameters:** None\n\n"
             "**Example Request:**\n"
             "```\n"
-            "GET /health\n"
+            "GET http://api.nub-coder.tech/health\n"
             "```\n\n"
             "**Example Response:**\n"
             "```json\n"
