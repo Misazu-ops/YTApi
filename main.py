@@ -83,7 +83,7 @@ async def require_token(token: Optional[str] = Query(None, description="Your API
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Skip rate limiting for search endpoints and health check
-        if request.url.path in ["/search", "/health", "/clear-cache", "/rate-limit-status"]:
+        if request.url.path in ["/", "/search", "/health", "/clear-cache", "/rate-limit-status"]:
             return await call_next(request)
         
         # Check for token authentication from query parameter
