@@ -246,7 +246,7 @@
                 <div class="endpoint-description">
                     Extract detailed video information or search YouTube with full metadata
                 </div>
-                <div class="code-block">GET /info?token=YOUR_TOKEN&q=https://youtube.com/watch?v=VIDEO_ID</div>
+                <div class="code-block">GET http://api.nub-coder.tech/info?token=YOUR_TOKEN&q=https://youtube.com/watch?v=VIDEO_ID</div>
             </div>
             
             <div class="endpoint">
@@ -258,7 +258,7 @@
                 <div class="endpoint-description">
                     Search YouTube videos without detailed extraction - unlimited usage
                 </div>
-                <div class="code-block">GET /search?q=python tutorial&max_results=5</div>
+                <div class="code-block">GET http://api.nub-coder.tech/search?q=python tutorial&max_results=5</div>
             </div>
             
             <div class="endpoint">
@@ -270,7 +270,7 @@
                 <div class="endpoint-description">
                     Process multiple YouTube URLs concurrently (up to 5 URLs)
                 </div>
-                <div class="code-block">POST /batch-info?token=YOUR_TOKEN
+                <div class="code-block">POST http://api.nub-coder.tech/batch-info?token=YOUR_TOKEN
 Content-Type: application/json
 ["url1", "url2", "url3"]</div>
             </div>
@@ -284,7 +284,7 @@ Content-Type: application/json
                 <div class="endpoint-description">
                     Check your current rate limit status and remaining requests
                 </div>
-                <div class="code-block">GET /rate-limit-status?token=YOUR_TOKEN</div>
+                <div class="code-block">GET http://api.nub-coder.tech/rate-limit-status?token=YOUR_TOKEN</div>
             </div>
             
             <div class="endpoint">
@@ -296,7 +296,7 @@ Content-Type: application/json
                 <div class="endpoint-description">
                     Health check endpoint to verify API status
                 </div>
-                <div class="code-block">GET /health</div>
+                <div class="code-block">GET http://api.nub-coder.tech/health</div>
             </div>
         </div>
         
