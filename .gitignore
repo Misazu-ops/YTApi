@@ -1,6 +1,7 @@
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+plugins/__pycache__/
 *.py[cod]
 *$py.class
 attached_assets/
