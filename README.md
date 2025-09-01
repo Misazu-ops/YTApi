@@ -188,7 +188,7 @@ curl "http://0.0.0.0:8000/info?token=YOUR_TOKEN&q=https://youtube.com/watch?v=VI
 
 ### Search videos:
 ```bash
-curl "http://0.0.0.0:8000/search?q=python tutorial&max_results=5"
+curl "http://0.0.0.0:8000/search?q=python tutorial&max_results=1"
 ```
 
 ### Check rate limit status:

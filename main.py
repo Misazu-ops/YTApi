@@ -179,7 +179,7 @@ def _extract_info(url: str):
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         return ydl.extract_info(url, download=False)
 
-def _search_videos(query: str, max_results: int = 5):
+def _search_videos(query: str, max_results: int = 1):
     """Search YouTube videos by query"""
     search_url = f"ytsearch{max_results}:{query}"
     
