@@ -1,4 +1,3 @@
-
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import asyncio
@@ -17,10 +16,10 @@ from tools import (
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name
-    
+
     # Check if user already has a token
     existing_token = await get_user_token(user_id)
-    
+
     keyboard = InlineKeyboardMarkup([
         [
             InlineKeyboardButton("🔑 View Token", callback_data="view_token"),
@@ -31,7 +30,7 @@ async def start_command(client: Client, message: Message):
             InlineKeyboardButton("❓ Help", callback_data="help")
         ]
     ])
-    
+
     if existing_token:
         await message.reply_text(
             f"🎉 **Welcome back, {username}!**\n\n"
@@ -50,7 +49,7 @@ async def start_command(client: Client, message: Message):
         # Generate new token
         new_token = generate_token()
         await set_user_token(user_id, new_token)
-        
+
         await message.reply_text(
             f"🎉 **Welcome to YT-DLP API, {username}!**\n\n"
             f"🔑 Your API token: `{new_token}`\n\n"
@@ -80,7 +79,7 @@ async def menu_command(client: Client, message: Message):
             InlineKeyboardButton("📖 API Docs", callback_data="api_docs")
         ]
     ])
-    
+
     await message.reply_text(
         "🤖 **YT-DLP API Bot Menu**\n\n"
         "Choose an option below:",
@@ -91,7 +90,7 @@ async def menu_command(client: Client, message: Message):
 async def handle_callbacks(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
     data = callback_query.data
-    
+
     if data == "view_token":
         token = await get_user_token(user_id)
         if token:
@@ -110,17 +109,17 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             )
         else:
             await callback_query.answer("❌ No token found. Use /start to generate one.", show_alert=True)
-    
+
     elif data == "usage_status":
         token = await get_user_token(user_id)
         if not token:
             await callback_query.answer("❌ No token found. Use /start to get one.", show_alert=True)
             return
-        
+
         request_count = await get_user_request_count(user_id)
         limit = 10000 if is_admin(user_id) else 1000
         remaining = max(0, limit - request_count)
-        
+
         status_text = (
             f"📊 **Usage Statistics**\n\n"
             f"🔑 Token: `{token}`\n"
@@ -128,15 +127,15 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             f"📉 Remaining: **{remaining}**\n"
             f"🕒 Reset: Midnight UTC\n"
         )
-        
+
         if is_admin(user_id):
             status_text += "\n👑 **Admin privileges active**"
-        
+
         # Progress bar
         progress = int((request_count / limit) * 10)
         bar = "🟩" * progress + "⬜" * (10 - progress)
         status_text += f"\n\n📊 Progress: {bar}"
-        
+
         await callback_query.answer()
         await callback_query.edit_message_text(
             status_text,
@@ -145,7 +144,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
             ])
         )
-    
+
     elif data == "revoke_token":
         await callback_query.answer()
         await callback_query.edit_message_text(
@@ -159,15 +158,15 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 ]
             ])
         )
-    
+
     elif data == "confirm_revoke":
         # Revoke old token
         await revoke_user_token(user_id)
-        
+
         # Generate new token
         new_token = generate_token()
         await set_user_token(user_id, new_token)
-        
+
         await callback_query.answer("✅ Token revoked successfully!")
         await callback_query.edit_message_text(
             f"✅ **Token Revoked Successfully!**\n\n"
@@ -177,8 +176,9 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
             ])
         )
-    
+
     elif data == "help":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
         await callback_query.answer()
         await callback_query.edit_message_text(
             "❓ **Help & Commands**\n\n"
@@ -196,13 +196,13 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `/batch-info` - Process multiple URLs\n"
             "• `/health` - Health check\n\n"
             "📝 **Usage:**\n"
-            "Example: `http://api.nub-coder.tech/info?token=YOUR_TOKEN&q=VIDEO_URL`\n\n"
+            f"Example: `http://api.nub-coder.tech/info?token={user_token}&q=VIDEO_URL`\n\n"
             "🐍 **Python Example:**\n"
             "```python\n"
             "import requests\n"
             "response = requests.get(\n"
             "    'http://api.nub-coder.tech/info',\n"
-            "    params={'token': 'YOUR_TOKEN', 'q': 'VIDEO_URL'}\n"
+            f"    params={{'token': '{user_token}', 'q': 'VIDEO_URL'}}\n"
             ")\n"
             "data = response.json()\n"
             "```",
@@ -211,7 +211,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
             ])
         )
-    
+
     elif data == "api_docs":
         await callback_query.answer()
         await callback_query.edit_message_text(
@@ -243,8 +243,9 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 ]
             ])
         )
-    
+
     elif data == "api_info":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
         await callback_query.answer()
         await callback_query.edit_message_text(
             "🎥 **Video Info Endpoint**\n\n"
@@ -257,14 +258,14 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "• `max_results` - Max results (for search)\n\n"
             "**Example Request:**\n"
             "```\n"
-            "GET http://api.nub-coder.tech/info?token=TOKEN&q=https://youtube.com/watch?v=ID\n"
+            f"GET http://api.nub-coder.tech/info?token={user_token}&q=https://youtube.com/watch?v=ID\n"
             "```\n\n"
             "**Python Example:**\n"
             "```python\n"
             "import requests\n"
             "url = 'http://api.nub-coder.tech/info'\n"
             "params = {\n"
-            "    'token': 'YOUR_TOKEN',\n"
+            f"    'token': '{user_token}',\n"
             "    'q': 'https://youtube.com/watch?v=VIDEO_ID'\n"
             "}\n"
             "response = requests.get(url, params=params)\n"
@@ -289,7 +290,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
         )
-    
+
     elif data == "api_search":
         await callback_query.answer()
         await callback_query.edit_message_text(
@@ -338,7 +339,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
         )
-    
+
     elif data == "api_batch":
         await callback_query.answer()
         await callback_query.edit_message_text(
@@ -373,7 +374,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
         )
-    
+
     elif data == "api_ratelimit":
         await callback_query.answer()
         await callback_query.edit_message_text(
@@ -404,7 +405,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
         )
-    
+
     elif data == "api_health":
         await callback_query.answer()
         await callback_query.edit_message_text(
@@ -430,7 +431,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
         )
-    
+
     elif data == "back_menu":
         keyboard = InlineKeyboardMarkup([
             [
@@ -445,7 +446,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 InlineKeyboardButton("📖 API Docs", callback_data="api_docs")
             ]
         ])
-        
+
         await callback_query.answer()
         await callback_query.edit_message_text(
             "🤖 **YT-DLP API Bot Menu**\n\n"
