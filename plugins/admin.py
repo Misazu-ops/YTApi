@@ -18,23 +18,101 @@ async def bot_stats(client: Client, message: Message):
         await message.reply_text("❌ You don't have admin privileges.")
         return
     
-    # Get total users and active tokens
-    user_keys = redis_client.keys("user_token:*")
-    total_users = len(user_keys)
-    
-    # Get active users (users with requests today)
-    request_keys = redis_client.keys("user_requests:*")
-    active_users = len(request_keys)
-    
-    await message.reply_text(
-        f"📊 **Bot Statistics**\n\n"
-        f"👥 Total users: **{total_users}**\n"
-        f"🔥 Active today: **{active_users}**\n"
-        f"🗃️ Redis keys: **{len(redis_client.keys('*'))}**\n\n"
-        f"📈 **Usage Distribution:**\n"
-        f"• Regular users: 1000 req/day\n"
-        f"• Admin users: 10000 req/day"
-    )
+    try:
+        # Get total users and active tokens
+        user_keys = redis_client.keys("user_token:*")
+        total_users = len(user_keys)
+        
+        # Get active users (users with requests today)
+        request_keys = redis_client.keys("user_requests:*")
+        active_users = len(request_keys)
+        
+        # Calculate total requests today
+        total_requests_today = 0
+        user_request_data = []
+        
+        for key in request_keys:
+            try:
+                count = int(redis_client.get(key) or 0)
+                total_requests_today += count
+                user_id_from_key = key.split(":")[1]
+                user_request_data.append((user_id_from_key, count))
+            except:
+                continue
+        
+        # Sort users by request count (top users)
+        user_request_data.sort(key=lambda x: x[1], reverse=True)
+        top_users = user_request_data[:5]
+        
+        # Calculate admin users count
+        admin_count = 0
+        admin_requests = 0
+        regular_requests = 0
+        
+        for user_id_str, count in user_request_data:
+            if is_admin(int(user_id_str)):
+                admin_count += 1
+                admin_requests += count
+            else:
+                regular_requests += count
+        
+        # Get Redis info
+        redis_info = redis_client.info()
+        redis_memory = redis_info.get('used_memory_human', 'N/A')
+        redis_uptime = redis_info.get('uptime_in_seconds', 0)
+        redis_uptime_hours = round(redis_uptime / 3600, 1)
+        
+        # Usage statistics
+        avg_requests_per_active_user = round(total_requests_today / max(active_users, 1), 2)
+        
+        # Build top users text
+        top_users_text = ""
+        for i, (uid, count) in enumerate(top_users, 1):
+            admin_badge = "👑" if is_admin(int(uid)) else "👤"
+            top_users_text += f"{admin_badge} User {uid}: {count} requests\n"
+        
+        if not top_users_text:
+            top_users_text = "No active users today"
+        
+        # Calculate usage percentages
+        user_utilization = round((active_users / max(total_users, 1)) * 100, 1)
+        
+        stats_message = (
+            f"📊 **Comprehensive Bot Statistics**\n\n"
+            f"👥 **User Metrics:**\n"
+            f"• Total registered: **{total_users}**\n"
+            f"• Active today: **{active_users}** ({user_utilization}%)\n"
+            f"• Admin users: **{admin_count}**\n"
+            f"• Regular users: **{total_users - admin_count}**\n\n"
+            
+            f"📈 **Request Analytics:**\n"
+            f"• Total requests today: **{total_requests_today:,}**\n"
+            f"• Admin requests: **{admin_requests:,}**\n"
+            f"• Regular requests: **{regular_requests:,}**\n"
+            f"• Avg per active user: **{avg_requests_per_active_user}**\n\n"
+            
+            f"🔥 **Top Users Today:**\n{top_users_text}\n"
+            
+            f"🗃️ **System Status:**\n"
+            f"• Redis memory usage: **{redis_memory}**\n"
+            f"• Redis uptime: **{redis_uptime_hours}h**\n"
+            f"• Total Redis keys: **{len(redis_client.keys('*'))}**\n\n"
+            
+            f"📋 **Rate Limits:**\n"
+            f"• Regular users: **1,000** req/day\n"
+            f"• Admin users: **10,000** req/day\n"
+            f"• Search endpoint: **Unlimited** (free)\n\n"
+            
+            f"⚡ **Performance:**\n"
+            f"• Active user ratio: **{user_utilization}%**\n"
+            f"• System load: {'🟢 Low' if total_requests_today < 50000 else '🟡 Medium' if total_requests_today < 100000 else '🔴 High'}\n"
+            f"• Cache efficiency: **Active**"
+        )
+        
+        await message.reply_text(stats_message)
+        
+    except Exception as e:
+        await message.reply_text(f"❌ Error retrieving stats: {str(e)}")
 
 @Client.on_message(filters.regex(r"^/user \d+") & filters.private)
 async def user_info(client: Client, message: Message):
