@@ -130,34 +130,4 @@ async def broadcast_command(client: Client, message: Message):
     except Exception as e:
         await message.reply_text(f"❌ Broadcast failed: {str(e)}")
 
-@Client.on_message(filters.command("broadcasthelp") & filters.private)
-async def broadcast_help(client: Client, message: Message):
-    user_id = message.from_user.id
-    
-    if not is_admin(user_id):
-        await message.reply_text("❌ You don't have admin privileges.")
-        return
-    
-    await message.reply_text(
-        "📢 **Broadcast Command Help**\n\n"
-        "**Usage:**\n"
-        "Reply to any message with `/broadcast` to send it to all users.\n\n"
-        "**Options:**\n"
-        "• `/broadcast` - Forward with author info\n"
-        "• `/broadcast -f` - Send copy without author\n\n"
-        "**Supported Message Types:**\n"
-        "• Text messages\n"
-        "• Photos with captions\n"
-        "• Videos with captions\n"
-        "• Documents with captions\n"
-        "• Any other media (forwarded)\n\n"
-        "**Features:**\n"
-        "• Real-time progress updates\n"
-        "• Automatic cleanup of invalid users\n"
-        "• Success rate statistics\n"
-        "• Error handling and reporting\n\n"
-        "**Example:**\n"
-        "1. Send a message\n"
-        "2. Reply to it with `/broadcast -f`\n"
-        "3. Message will be sent to all users without showing original author"
-    )
+
