@@ -353,7 +353,7 @@ async def video_info(
 @app.get("/search")
 async def search_videos(
     q: str = Query(..., description="Search query"),
-    max_results: int = Query(5, description="Number of results to return", ge=1, le=20)
+    max_results: int = Query(1, description="Number of results to return", ge=1, le=20)
 ):
     """Search YouTube videos without getting detailed info - FREE (no rate limit)"""
     start_time = time.time()
