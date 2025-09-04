@@ -41,6 +41,28 @@ telegram_app = Client(
     plugins=dict(root="plugins")
 )
 
+def setup_bot_commands():
+    """Set up bot commands menu"""
+    from pyrogram.types import BotCommand
+    
+    commands = [
+        BotCommand("start", "🚀 Get your API token and welcome message"),
+        BotCommand("menu", "📋 Show main menu with options"),
+        BotCommand("status", "📊 Check your usage statistics"),
+        BotCommand("token", "🔑 View your current API token"),
+        BotCommand("revoke", "🔄 Revoke your current token"),
+        BotCommand("help", "❓ Get help and API documentation"),
+    ]
+    
+    try:
+        telegram_app.set_bot_commands(commands)
+        print("✅ Bot commands set successfully")
+    except Exception as e:
+        print(f"⚠️ Failed to set bot commands: {e}")
+
+telegram_app.start()
+setup_bot_commands()
+telegram_app.stop()
 
 
 
@@ -489,41 +511,19 @@ async def batch_video_info(urls: list[str], token: str = Query(..., description=
         )
 
 
-async def setup_bot_commands():
-    """Set up bot commands menu"""
-    from pyrogram.types import BotCommand
-    
-    commands = [
-        BotCommand("start", "🚀 Get your API token and welcome message"),
-        BotCommand("menu", "📋 Show main menu with options"),
-        BotCommand("status", "📊 Check your usage statistics"),
-        BotCommand("token", "🔑 View your current API token"),
-        BotCommand("revoke", "🔄 Revoke your current token"),
-        BotCommand("help", "❓ Get help and API documentation"),
-    ]
-    
-    try:
-        await telegram_app.set_bot_commands(commands)
-        print("✅ Bot commands set successfully")
-    except Exception as e:
-        print(f"⚠️ Failed to set bot commands: {e}")
+
 
 def start_services():
     print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info",loop="asyncio")
 
-async def start_bot():
-    """Start the bot and set up commands"""
-    await telegram_app.start()
-    await setup_bot_commands()
-    print("🤖 Telegram bot started with commands configured")
-    await telegram_app.idle()
+
 
 if __name__ == "__main__":
     try:
         import asyncio
         threading.Thread(target=start_services).start()
-        asyncio.run(start_bot())
+        telegram_app.run()
     except KeyboardInterrupt:
         print("🛑 Services stopped by user")
     except Exception as e:
