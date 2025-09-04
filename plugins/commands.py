@@ -102,7 +102,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                 reply_markup=InlineKeyboardMarkup([
                     [
                         InlineKeyboardButton("🌐 GET Examples", callback_data="impl_get_all"),
-                        InlineKeyboardButton("🐍 Python Code", callback_data="impl_python_all")
+                        InlineKeyboardButton("🐍 Python Implement", callback_data="impl_python_all")
                     ],
                     [
                         InlineKeyboardButton("📋 Quick Reference", callback_data="impl_quick_ref"),
