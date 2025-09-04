@@ -22,7 +22,7 @@ async def start_command(client: Client, message: Message):
 
     keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🔑 View Token", callback_data="view_token"),
+            InlineKeyboardButton("🔧 API Implementation", callback_data="api_implementation"),
             InlineKeyboardButton("📊 Usage Status", callback_data="usage_status")
         ],
         [
@@ -68,7 +68,7 @@ async def start_command(client: Client, message: Message):
 async def menu_command(client: Client, message: Message):
     keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🔑 View Token", callback_data="view_token"),
+            InlineKeyboardButton("🔧 API Implementation", callback_data="api_implementation"),
             InlineKeyboardButton("📊 Usage Status", callback_data="usage_status")
         ],
         [
@@ -91,20 +91,23 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
     data = callback_query.data
 
-    if data == "view_token":
+    if data == "api_implementation":
         token = await get_user_token(user_id)
         if token:
             await callback_query.answer()
             await callback_query.edit_message_text(
-                f"🔑 **Your API Token:**\n\n"
-                f"`{token}`\n\n"
-                f"📝 **Usage:**\n"
-                f"```\n"
-                f"http://api.nub-coder.tech/info?token={token}&q=VIDEO_URL\n"
-                f"```\n\n"
-                f"⚠️ Keep this token secure!",
+                f"🔧 **API Implementation Guide**\n\n"
+                f"🔑 **Your Token:** `{token}`\n\n"
+                f"Choose implementation method:",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
+                    [
+                        InlineKeyboardButton("🌐 GET Examples", callback_data="impl_get_all"),
+                        InlineKeyboardButton("🐍 Python Code", callback_data="impl_python_all")
+                    ],
+                    [
+                        InlineKeyboardButton("📋 Quick Reference", callback_data="impl_quick_ref"),
+                        InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")
+                    ]
                 ])
             )
         else:
@@ -209,6 +212,144 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📖 API Docs", callback_data="api_docs")],
                 [InlineKeyboardButton("🔙 Back to Menu", callback_data="back_menu")]
+            ])
+        )
+
+    elif data == "impl_get_all":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🌐 **All API Endpoints - GET Examples**\n\n"
+            "**1. Video Info:**\n"
+            "```\n"
+            f"GET http://api.nub-coder.tech/info?token={user_token}&q=https://youtube.com/watch?v=dQw4w9WgXcQ\n"
+            "```\n\n"
+            "**2. Search Videos (Free):**\n"
+            "```\n"
+            f"GET http://api.nub-coder.tech/search?q=python tutorial&max_results=5\n"
+            "```\n\n"
+            "**3. Batch Processing:**\n"
+            "```bash\n"
+            f"curl -X POST \"http://api.nub-coder.tech/batch-info?token={user_token}\" \\\n"
+            "  -H \"Content-Type: application/json\" \\\n"
+            "  -d '[\"https://youtube.com/watch?v=ID1\", \"https://youtube.com/watch?v=ID2\"]'\n"
+            "```\n\n"
+            "**4. Rate Limit Status:**\n"
+            "```\n"
+            f"GET http://api.nub-coder.tech/rate-limit-status?token={user_token}\n"
+            "```\n\n"
+            "**5. Health Check:**\n"
+            "```\n"
+            "GET http://api.nub-coder.tech/health\n"
+            "```",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to Implementation", callback_data="api_implementation")]
+            ])
+        )
+
+    elif data == "impl_python_all":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🐍 **Complete Python Implementation**\n\n"
+            "```python\n"
+            "import requests\n"
+            "import json\n"
+            "from typing import List, Dict, Optional\n\n"
+            "class YTDLPApi:\n"
+            "    def __init__(self, token: str):\n"
+            f"        self.token = '{user_token}'\n"
+            "        self.base_url = 'http://api.nub-coder.tech'\n"
+            "    \n"
+            "    def get_video_info(self, url_or_query: str, max_results: int = 1) -> Dict:\n"
+            "        \"\"\"Get video information\"\"\"\n"
+            "        response = requests.get(\n"
+            "            f'{self.base_url}/info',\n"
+            "            params={'token': self.token, 'q': url_or_query, 'max_results': max_results}\n"
+            "        )\n"
+            "        return response.json()\n"
+            "    \n"
+            "    def search_videos(self, query: str, max_results: int = 5) -> Dict:\n"
+            "        \"\"\"Search videos (no token required)\"\"\"\n"
+            "        response = requests.get(\n"
+            "            f'{self.base_url}/search',\n"
+            "            params={'q': query, 'max_results': max_results}\n"
+            "        )\n"
+            "        return response.json()\n"
+            "```",
+            reply_markup=InlineKeyboardMarkup([
+                [
+                    InlineKeyboardButton("➡️ More Methods", callback_data="impl_python_all2"),
+                    InlineKeyboardButton("🔙 Back", callback_data="api_implementation")
+                ]
+            ])
+        )
+
+    elif data == "impl_python_all2":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🐍 **Python Implementation (Continued)**\n\n"
+            "```python\n"
+            "    def batch_process(self, urls: List[str]) -> Dict:\n"
+            "        \"\"\"Process multiple URLs (max 5)\"\"\"\n"
+            "        urls = urls[:5]  # Limit to 5\n"
+            "        response = requests.post(\n"
+            "            f'{self.base_url}/batch-info?token={self.token}',\n"
+            "            headers={'Content-Type': 'application/json'},\n"
+            "            json=urls\n"
+            "        )\n"
+            "        return response.json()\n"
+            "    \n"
+            "    def get_rate_limit_status(self) -> Dict:\n"
+            "        \"\"\"Check quota usage\"\"\"\n"
+            "        response = requests.get(\n"
+            "            f'{self.base_url}/rate-limit-status',\n"
+            "            params={'token': self.token}\n"
+            "        )\n"
+            "        return response.json()\n"
+            "    \n"
+            "    def health_check(self) -> Dict:\n"
+            "        \"\"\"Check API health\"\"\"\n"
+            "        response = requests.get(f'{self.base_url}/health')\n"
+            "        return response.json()\n\n"
+            "# Usage Example:\n"
+            f"api = YTDLPApi('{user_token}')\n"
+            "video = api.get_video_info('https://youtube.com/watch?v=dQw4w9WgXcQ')\n"
+            "search = api.search_videos('python tutorial', 3)\n"
+            "status = api.get_rate_limit_status()\n"
+            "health = api.health_check()\n"
+            "```",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to Implementation", callback_data="api_implementation")]
+            ])
+        )
+
+    elif data == "impl_quick_ref":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "📋 **Quick Reference**\n\n"
+            f"🔑 **Token:** `{user_token}`\n"
+            f"🌐 **Base URL:** `http://api.nub-coder.tech`\n\n"
+            "**Endpoints:**\n"
+            f"• `/info?token={user_token}&q=URL` - Video info\n"
+            "• `/search?q=QUERY&max_results=5` - Search (free)\n"
+            f"• `/batch-info?token={user_token}` - Batch (POST)\n"
+            f"• `/rate-limit-status?token={user_token}` - Quota\n"
+            "• `/health` - Health check\n\n"
+            "**Rate Limits:**\n"
+            "• Data endpoints: 1000/day\n"
+            "• Search: Unlimited\n"
+            "• Batch: Max 5 URLs per request\n\n"
+            "**Python Quick Start:**\n"
+            "```python\n"
+            "import requests\n"
+            f"r = requests.get('http://api.nub-coder.tech/info?token={user_token}&q=VIDEO_URL')\n"
+            "data = r.json()\n"
+            "```",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to Implementation", callback_data="api_implementation")]
             ])
         )
 
@@ -824,7 +965,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
     elif data == "back_menu":
         keyboard = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🔑 View Token", callback_data="view_token"),
+                InlineKeyboardButton("🔧 API Implementation", callback_data="api_implementation"),
                 InlineKeyboardButton("📊 Usage Status", callback_data="usage_status")
             ],
             [
