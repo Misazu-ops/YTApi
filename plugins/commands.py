@@ -260,7 +260,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("🌐 GET Examples", callback_data="api_info_get"),
-                    InlineKeyboardButton("🐍 Python Examples", callback_data="api_info_python")
+                    InlineKeyboardButton("🐍 Python Implementation", callback_data="api_info_python")
                 ],
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
@@ -296,7 +296,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         user_token = await get_user_token(user_id) or "YOUR_TOKEN"
         await callback_query.answer()
         await callback_query.edit_message_text(
-            "🐍 **Video Info - Python Examples**\n\n"
+            "🐍 **Video Info - Python Implementation**\n\n"
             "**1. Get info by URL:**\n"
             "```python\n"
             "import requests\n\n"
@@ -347,7 +347,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("🌐 GET Examples", callback_data="api_search_get"),
-                    InlineKeyboardButton("🐍 Python Examples", callback_data="api_search_python")
+                    InlineKeyboardButton("🐍 Python Implementation", callback_data="api_search_python")
                 ],
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
@@ -385,7 +385,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
     elif data == "api_search_python":
         await callback_query.answer()
         await callback_query.edit_message_text(
-            "🐍 **Search - Python Examples**\n\n"
+            "🐍 **Search - Python Implementation**\n\n"
             "**1. Simple search:**\n"
             "```python\n"
             "import requests\n\n"
@@ -440,7 +440,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("🌐 curl Examples", callback_data="api_batch_get"),
-                    InlineKeyboardButton("🐍 Python Examples", callback_data="api_batch_python")
+                    InlineKeyboardButton("🐍 Python Implementation", callback_data="api_batch_python")
                 ],
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
@@ -488,7 +488,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         user_token = await get_user_token(user_id) or "YOUR_TOKEN"
         await callback_query.answer()
         await callback_query.edit_message_text(
-            "🐍 **Batch Processing - Python Examples**\n\n"
+            "🐍 **Batch Processing - Python Implementation**\n\n"
             "**1. Simple batch processing:**\n"
             "```python\n"
             "import requests\n"
@@ -575,7 +575,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("🌐 GET Examples", callback_data="api_ratelimit_get"),
-                    InlineKeyboardButton("🐍 Python Examples", callback_data="api_ratelimit_python")
+                    InlineKeyboardButton("🐍 Python Implementation", callback_data="api_ratelimit_python")
                 ],
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
@@ -623,7 +623,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
         user_token = await get_user_token(user_id) or "YOUR_TOKEN"
         await callback_query.answer()
         await callback_query.edit_message_text(
-            "🐍 **Rate Limit - Python Examples**\n\n"
+            "🐍 **Rate Limit - Python Implementation**\n\n"
             "**1. Check quota status:**\n"
             "```python\n"
             "import requests\n\n"
@@ -679,7 +679,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("🌐 GET Examples", callback_data="api_health_get"),
-                    InlineKeyboardButton("🐍 Python Examples", callback_data="api_health_python")
+                    InlineKeyboardButton("🐍 Python Implementation", callback_data="api_health_python")
                 ],
                 [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
             ])
@@ -724,7 +724,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
     elif data == "api_health_python":
         await callback_query.answer()
         await callback_query.edit_message_text(
-            "🐍 **Health Check - Python Examples**\n\n"
+            "🐍 **Health Check - Python Implementation**\n\n"
             "**1. Simple health check:**\n"
             "```python\n"
             "import requests\n\n"
