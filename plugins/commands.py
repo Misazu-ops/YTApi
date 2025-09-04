@@ -365,20 +365,6 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "        )\n"
             "    except requests.RequestException as e:\n"
             "        return 0, 0, 0, False, str(e)\n\n"
-            "def health_check() -> Tuple[str, float]:\n"
-            "    \"\"\"Check API health - returns (status, response_time_ms)\"\"\"\n"
-            "    try:\n"
-            "        start_time = time.time()\n"
-            "        response = requests.get(f'{BASE_URL}/health', timeout=5)\n"
-            "        end_time = time.time()\n"
-            "        response.raise_for_status()\n"
-            "        \n"
-            "        data = response.json()\n"
-            "        response_time = round((end_time - start_time) * 1000, 2)\n"
-            "        \n"
-            "        return data.get('status', 'unknown'), response_time\n"
-            "    except requests.RequestException as e:\n"
-            "        return str(e), 0.0\n\n"
             "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Implementation", callback_data="api_implementation")]
