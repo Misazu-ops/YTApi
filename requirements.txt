@@ -7,3 +7,9 @@ redis
 tgcrypto
 python-ffmpeg
 ffmpeg
+fastapi
+pyrogram
+redis
+starlette
+uvicorn
+yt-dlp

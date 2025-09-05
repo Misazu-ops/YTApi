@@ -464,51 +464,6 @@ async def clear_cache():
 
 
 
-@app.post("/batch-info")
-async def batch_video_info(urls: list[str], token: str = Query(..., description="Your API token"), user_id: int = Depends(require_token)):
-    """Process multiple URLs concurrently"""
-    start_time = time.time()
-    
-    try:
-        # Process all URLs concurrently
-        tasks = [extract_video_info_async(url) for url in urls[:5]]  # Limit to 5 URLs
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        processed_results = []
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                processed_results.append({
-                    "url": urls[i],
-                    "error": str(result)
-                })
-            else:
-                format_url = extract_best_format_url(result.get("formats", []))
-                processed_results.append({
-                    "url": urls[i],
-                    "title": result.get("title"),
-                    "duration": result.get("duration"),
-                    "youtube_link": result.get("webpage_url"),
-                    "channel_name": result.get("uploader"),
-                    "views": result.get("view_count"),
-                    "video_id": result.get("id"),
-                    "stream_url": format_url,
-                })
-        
-        elapsed = round(time.time() - start_time, 2)
-        return JSONResponse(content={
-            "results": processed_results,
-            "total_time": f"{elapsed} sec"
-        })
-        
-    except Exception as e:
-        elapsed = round(time.time() - start_time, 2)
-        return JSONResponse(
-            content={
-                "error": str(e),
-                "time_taken": f"{elapsed} sec"
-            },
-            status_code=400
-        )
 
 
 
