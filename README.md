@@ -12,7 +12,6 @@ A FastAPI-based web service that provides an optimized interface to yt-dlp for e
 - 🔍 Free unlimited search functionality
 - 🎯 Chrome cookie support for enhanced access
 - 📈 Redis-backed user management
-- ⚡ Concurrent batch processing
 - 🛡️ Admin panel with user management
 - 📱 Interactive Telegram bot interface
 
@@ -30,12 +29,6 @@ Search YouTube videos without detailed info extraction - **FREE (no rate limit)*
 - **Parameter**: `q` (required) - Search query
 - **Parameter**: `max_results` (optional) - Number of results (1-20, default: 5)
 - No authentication required
-
-### `/batch-info`
-Process multiple YouTube URLs concurrently (POST)
-- **Body**: JSON array of URLs (max 5)
-- **Parameter**: `token` (required) - Your API token
-- **Rate limit**: Each URL counts towards daily limit
 
 ### `/health`
 Health check endpoint (no authentication required)
@@ -196,13 +189,6 @@ curl "http://0.0.0.0:8000/search?q=python tutorial&max_results=1"
 curl "http://0.0.0.0:8000/rate-limit-status?token=YOUR_TOKEN"
 ```
 
-### Batch processing:
-```bash
-curl -X POST "http://0.0.0.0:8000/batch-info?token=YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '["https://youtube.com/watch?v=VIDEO1", "https://youtube.com/watch?v=VIDEO2"]'
-```
-
 ## File Structure
 
 ```
@@ -269,7 +255,6 @@ The API includes comprehensive error handling for:
 
 - **LRU caching** for video info and search results (5-10 minutes)
 - **Thread pool execution** for CPU-bound yt-dlp operations
-- **Concurrent batch processing** with asyncio
 - **Chrome cookie integration** for enhanced access
 - **Optimized yt-dlp settings** for faster extraction
 - **Redis connection pooling** for database operations

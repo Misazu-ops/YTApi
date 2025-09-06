@@ -196,7 +196,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "🔗 **API Endpoints:**\n"
             "• `/info` - Get video info + streamable URL (requires token)\n"
             "• `/search` - Search videos (free, no URLs)\n"
-            "• `/batch-info` - Process multiple URLs + streamable URLs\n"
+            "\n"
             "• `/health` - Health check\n\n"
             "📝 **Usage:**\n"
             f"Example: `http://api.nub-coder.tech/info?token={user_token}&q=VIDEO_URL`\n\n"
@@ -228,12 +228,6 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "```\n"
             f"GET http://api.nub-coder.tech/search?q=python tutorial&max_results=5\n"
             "```\n\n"
-            "**3. Batch Processing:**\n"
-            "```bash\n"
-            f"curl -X POST \"http://api.nub-coder.tech/batch-info?token={user_token}\" \\\n"
-            "  -H \"Content-Type: application/json\" \\\n"
-            "  -d '[\"https://youtube.com/watch?v=ID1\", \"https://youtube.com/watch?v=ID2\"]'\n"
-            "```\n\n"
             "**4. Rate Limit Status:**\n"
             "```\n"
             f"GET http://api.nub-coder.tech/rate-limit-status?token={user_token}\n"
@@ -264,11 +258,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "r = requests.get(f'{BASE}/info',\n"
             "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
             "data = r.json()\n\n"
-            "# Batch processing\n"
-            "urls = ['URL1', 'URL2']\n"
-            "r = requests.post(f'{BASE}/batch-info?token={TOKEN}',\n"
-            "    json=urls)\n"
-            "batch_data = r.json()\n"
+
             "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Implementation", callback_data="api_implementation")]
@@ -285,7 +275,6 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "**Endpoints:**\n"
             f"• `/info?token={user_token}&q=URL` - Video info\n"
             "• `/search?q=QUERY&max_results=5` - Search (free)\n"
-            f"• `/batch-info?token={user_token}` - Batch (POST)\n"
             f"• `/rate-limit-status?token={user_token}` - Quota\n"
             "• `/health` - Health check\n\n"
             "**Rate Limits:**\n"
@@ -323,10 +312,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
                     InlineKeyboardButton("🔍 Search", callback_data="api_search")
                 ],
                 [
-                    InlineKeyboardButton("📦 Batch Processing", callback_data="api_batch"),
-                    InlineKeyboardButton("📊 Rate Limit", callback_data="api_ratelimit")
-                ],
-                [
+                    InlineKeyboardButton("📊 Rate Limit", callback_data="api_ratelimit"),
                     InlineKeyboardButton("❤️ Health Check", callback_data="api_health")
                 ],
                 [
@@ -401,11 +387,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "r = requests.get(f'{BASE}/info',\n"
             "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
             "data = r.json()\n\n"
-            "# Batch processing\n"
-            "urls = ['URL1', 'URL2']\n"
-            "r = requests.post(f'{BASE}/batch-info?token={TOKEN}',\n"
-            "    json=urls)\n"
-            "batch_data = r.json()\n"
+
             "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Video Info", callback_data="api_info")]
@@ -478,95 +460,15 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "r = requests.get(f'{BASE}/info',\n"
             "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
             "data = r.json()\n\n"
-            "# Batch processing\n"
-            "urls = ['URL1', 'URL2']\n"
-            "r = requests.post(f'{BASE}/batch-info?token={TOKEN}',\n"
-            "    json=urls)\n"
-            "batch_data = r.json()\n"
+
             "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Search", callback_data="api_search")]
             ])
         )
 
-    elif data == "api_batch":
-        await callback_query.answer()
-        await callback_query.edit_message_text(
-            "📦 **Batch Processing Endpoint**\n\n"
-            "**Endpoint:** `http://api.nub-coder.tech/batch-info`\n"
-            "**Method:** `POST`\n"
-            "**Auth:** Token required\n"
-            "**Returns:** Video metadata + streamable URLs for each video\n\n"
-            "**Parameters:**\n"
-            "• `token` - Your API token (query param)\n"
-            "• Request body: JSON array of URLs\n"
-            "• **Limit:** Max 5 URLs per request\n\n"
-            "Select example type:",
-            reply_markup=InlineKeyboardMarkup([
-                [
-                    InlineKeyboardButton("🌐 curl Examples", callback_data="api_batch_get"),
-                    InlineKeyboardButton("🐍 Python Implementation", callback_data="api_batch_python")
-                ],
-                [InlineKeyboardButton("🔙 Back to API Docs", callback_data="api_docs")]
-            ])
-        )
 
-    elif data == "api_batch_get":
-        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
-        await callback_query.answer()
-        await callback_query.edit_message_text(
-            "🌐 **Batch Processing - curl Examples**\n\n"
-            "**1. Basic batch request:**\n"
-            "```bash\n"
-            f"curl -X POST \"http://api.nub-coder.tech/batch-info?token={user_token}\" \\\n"
-            "  -H \"Content-Type: application/json\" \\\n"
-            "  -d '[\"https://youtube.com/watch?v=dQw4w9WgXcQ\", \"https://youtube.com/watch?v=9bZkp7q19f0\"]'\n"
-            "```\n\n"
-            "**2. Multiple URLs (max 5):**\n"
-            "```bash\n"
-            f"curl -X POST \"http://api.nub-coder.tech/batch-info?token={user_token}\" \\\n"
-            "  -H \"Content-Type: application/json\" \\\n"
-            "  -d '[\"https://youtube.com/watch?v=VIDEO1\", \"https://youtube.com/watch?v=VIDEO2\", \"https://youtube.com/watch?v=VIDEO3\", \"https://youtube.com/watch?v=VIDEO4\", \"https://youtube.com/watch?v=VIDEO5\"]'\n"
-            "```\n\n"
-            "**3. With timeout and verbose output:**\n"
-            "```bash\n"
-            f"curl -v --max-time 60 \\\n"
-            f"  -X POST \"http://api.nub-coder.tech/batch-info?token={user_token}\" \\\n"
-            "  -H \"Content-Type: application/json\" \\\n"
-            "  -d '[\"https://youtube.com/watch?v=ID\"]'\n"
-            "```",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔙 Back to Batch", callback_data="api_batch")]
-            ])
-        )
 
-    elif data == "api_batch_python":
-        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
-        await callback_query.answer()
-        await callback_query.edit_message_text(
-            "🐍 **Python Examples**\n\n"
-            "```python\n"
-            "import requests\n\n"
-            f"TOKEN = '{user_token}'\n"
-            "BASE = 'http://api.nub-coder.tech'\n\n"
-            "# Search (free)\n"
-            "r = requests.get(f'{BASE}/search', \n"
-            "    params={'q': 'python tutorial', 'max_results': 5})\n"
-            "results = r.json()['results']\n\n"
-            "# Get info\n" 
-            "r = requests.get(f'{BASE}/info',\n"
-            "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
-            "data = r.json()\n\n"
-            "# Batch processing\n"
-            "urls = ['URL1', 'URL2']\n"
-            "r = requests.post(f'{BASE}/batch-info?token={TOKEN}',\n"
-            "    json=urls)\n"
-            "batch_data = r.json()\n"
-            "```",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔙 Back to Batch", callback_data="api_batch")]
-            ])
-        )
 
     elif data == "api_ratelimit":
         await callback_query.answer()
@@ -642,11 +544,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "r = requests.get(f'{BASE}/info',\n"
             "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
             "data = r.json()\n\n"
-            "# Batch processing\n"
-            "urls = ['URL1', 'URL2']\n"
-            "r = requests.post(f'{BASE}/batch-info?token={TOKEN}',\n"
-            "    json=urls)\n"
-            "batch_data = r.json()\n"
+
             "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Rate Limit", callback_data="api_ratelimit")]
@@ -724,11 +622,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "r = requests.get(f'{BASE}/info',\n"
             "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
             "data = r.json()\n\n"
-            "# Batch processing\n"
-            "urls = ['URL1', 'URL2']\n"
-            "r = requests.post(f'{BASE}/batch-info?token={TOKEN}',\n"
-            "    json=urls)\n"
-            "batch_data = r.json()\n"
+
             "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Health Check", callback_data="api_health")]
