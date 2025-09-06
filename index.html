@@ -293,7 +293,7 @@
                     <span class="status-badge paid">Token Required</span>
                 </div>
                 <div class="endpoint-description">
-                    Extract detailed video information or search YouTube with full metadata. <strong>Returns streamable URL</strong> for direct video access.
+                    Extract detailed video information or search YouTube with full metadata. <strong>✅ Returns direct streamable URL</strong> for video downloads and streaming.
                 </div>
                 <div class="code-block">GET http://api.nub-coder.tech/info?token=YOUR_TOKEN&q=https://youtube.com/watch?v=VIDEO_ID</div>
             </div>
@@ -305,7 +305,7 @@
                     <span class="status-badge free">Free</span>
                 </div>
                 <div class="endpoint-description">
-                    Search YouTube videos without detailed extraction - unlimited usage
+                    Search YouTube videos without detailed extraction - unlimited usage. <strong>❌ No stream URLs</strong> (metadata only).
                 </div>
                 <div class="code-block">GET http://api.nub-coder.tech/search?q=python%20tutorial&max_results=5</div>
             </div>
@@ -317,7 +317,7 @@
                     <span class="status-badge paid">Token Required</span>
                 </div>
                 <div class="endpoint-description">
-                    Process multiple YouTube URLs concurrently (up to 5 URLs). <strong>Returns streamable URLs</strong> for each video.
+                    Process multiple YouTube URLs concurrently (up to 5 URLs). <strong>✅ Returns direct streamable URLs</strong> for each video.
                 </div>
                 <div class="code-block">POST http://api.nub-coder.tech/batch-info?token=YOUR_TOKEN
 Content-Type: application/json
