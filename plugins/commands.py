@@ -1,4 +1,5 @@
-from pyrogram import Client, filters
+from pyrogram import filters
+from pyrogram.client import Client
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import asyncio
 import sys
@@ -14,6 +15,9 @@ from tools import (
 
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
+    if not message.from_user:
+        return
+    
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name
 
@@ -1005,7 +1009,12 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             ])
         )
 
-
+    elif data == "api_health_get":
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🌐 **GET Health Check Examples**\n\n"
+            "**1. Direct browser access:**\n"
+            "```\n"
             "GET http://api.nub-coder.tech/health\n"
             "```\n\n"
             "**2. Using curl:**\n"
