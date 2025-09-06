@@ -405,7 +405,7 @@ async def search_videos(
                 "duration": entry.get("duration"),
                 "views": entry.get("view_count"),
                 "youtube_link": f"https://youtube.com/watch?v={entry.get('id')}",
-                "thumbnail": entry.get("thumbnail")
+                "thumbnail": entry.get("thumbnails")
             })
         
         return JSONResponse(content={
