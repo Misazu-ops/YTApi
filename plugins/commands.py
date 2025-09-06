@@ -736,7 +736,35 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "🌐 **Health Check - GET Examples**\n\n"
             "**1. Simple health check:**\n"
             "```\n"
-
+            "GET http://api.nub-coder.tech/health\n"
+            "```\n\n"
+            "**2. Using curl:**\n"
+            "```bash\n"
+            "curl http://api.nub-coder.tech/health\n"
+            "```\n\n"
+            "**3. With timing information:**\n"
+            "```bash\n"
+            "curl -w \"Response time: %{time_total}s\\n\" http://api.nub-coder.tech/health\n"
+            "```\n\n"
+            "**4. Test connectivity:**\n"
+            "```bash\n"
+            "curl -f -s http://api.nub-coder.tech/health && echo \"API is healthy\" || echo \"API is down\"\n"
+            "```\n\n"
+            "**5. Browser URL:**\n"
+            "```\n"
+            "http://api.nub-coder.tech/health\n"
+            "```\n\n"
+            "**Example Response:**\n"
+            "```json\n"
+            "{\n"
+            "  \"status\": \"ok\"\n"
+            "}\n"
+            "```\n\n"
+            "**Expected Response Time:** < 100ms",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to Health Check", callback_data="api_health")]
+            ])
+        )
 
     elif data == "impl_python_part2":
         user_token = await get_user_token(user_id) or "YOUR_TOKEN"
