@@ -17,7 +17,7 @@ from tools import (
 async def start_command(client: Client, message: Message):
     if not message.from_user:
         return
-    
+
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name
 
@@ -258,8 +258,8 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "from datetime import datetime\n\n"
             f"API_TOKEN = '{user_token}'\n"
             "BASE_URL = 'http://api.nub-coder.tech'\n\n"
-            "def get_video_info(url_or_query: str, max_results: int = 1) -> Tuple[str, str, int, str, str, int, str, str]:\n"
-            "    \"\"\"Get video info - returns (title, video_id, duration, youtube_link, channel_name, views, stream_url, time_taken)\"\"\"\n"
+            "def get_video_info(url_or_query: str, max_results: int = 1) -> Tuple[str, str, int, str, str, int, str, str, str]:\n"
+            "    \"\"\"Get video info - returns (title, video_id, duration, youtube_link, channel_name, views, stream_url, thumbnail, time_taken)\"\"\"\n"
             "    try:\n"
             "        response = requests.get(\n"
             "            f'{BASE_URL}/info',\n"
@@ -280,6 +280,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "            data.get('channel_name', 'N/A'),\n"
             "            data.get('views', 0),\n"
             "            data.get('url', 'N/A'),\n"
+            "            data.get('thumbnail', 'N/A'),\n"
             "            data.get('time_taken', 'N/A')\n"
             "        )\n"
             "    except requests.RequestException as e:\n"
@@ -492,7 +493,8 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "    print(f\"Title: {video_info['title']}\")\n"
             "    print(f\"Duration: {video_info['duration']} seconds\")\n"
             "    print(f\"Views: {video_info.get('views', 'N/A')}\")\n"
-            "    print(f\"Stream URL: {video_info['url']}\")\n\n"
+            "    print(f\"Stream URL: {video_info['url']}\")\n"
+            "    print(f\"Thumbnail: {video_info['thumbnail']}\")\n\n"
             "# By search query\n"
             "search_result = get_video_info('python tutorial', max_results=1)\n"
             "if search_result:\n"
@@ -737,7 +739,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
     elif data == "api_health_get":
         await callback_query.answer()
         await callback_query.edit_message_text(
-            "🌐 **Health Check - GET Examples**\n\n"
+            "🌐 **GET Health Check Examples**\n\n"
             "**1. Simple health check:**\n"
             "```\n"
             "GET http://api.nub-coder.tech/health\n"
@@ -765,6 +767,30 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "}\n"
             "```\n\n"
             "**Expected Response Time:** < 100ms",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back to Health Check", callback_data="api_health")]
+            ])
+        )
+
+    elif data == "api_health_python":
+        user_token = await get_user_token(user_id) or "YOUR_TOKEN"
+        await callback_query.answer()
+        await callback_query.edit_message_text(
+            "🐍 **Python Examples**\n\n"
+            "```python\n"
+            "import requests\n\n"
+            f"TOKEN = '{user_token}'\n"
+            "BASE = 'http://api.nub-coder.tech'\n\n"
+            "# Search (free)\n"
+            "r = requests.get(f'{BASE}/search', \n"
+            "    params={'q': 'python tutorial', 'max_results': 5})\n"
+            "results = r.json()['results']\n\n"
+            "# Get info\n" 
+            "r = requests.get(f'{BASE}/info',\n"
+            "    params={'token': TOKEN, 'q': 'VIDEO_URL'})\n"
+            "data = r.json()\n\n"
+
+            "```",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back to Health Check", callback_data="api_health")]
             ])
@@ -853,8 +879,7 @@ async def handle_callbacks(client: Client, callback_query: CallbackQuery):
             "    print(f\"Views: {info['views']:,}\")\n"
             "    print(f\"Channel: {info['channel_name']}\")\n"
             "    print(f\"Stream URL: {info['url']}\")\n"
-            "except Exception as e:\n"
-            "    print(f\"Video info failed: {e}\")\n\n"
+            "    print(f\"Thumbnail: {info['thumbnail']}\")\n\n"
             "# Example 3: Check rate limit\n"
             "try:\n"
             "    status = client.check_rate_limit()\n"

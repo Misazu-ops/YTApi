@@ -299,6 +299,7 @@ async def video_info(
                 "views": info.get("view_count"),
                 "video_id": info.get("id"),
                 "url": format_url,
+                "thumbnail": info.get("thumbnail"),
                 "time_taken": f"{elapsed} sec"
             })
         else:
@@ -335,6 +336,7 @@ async def video_info(
                     "views": detailed_info.get("view_count"),
                     "video_id": detailed_info.get("id"),
                     "url": format_url,
+                    "thumbnail": detailed_info.get("thumbnail"),
                     "time_taken": f"{elapsed} sec"
                 })
             else:
