@@ -8,7 +8,6 @@ tgcrypto
 python-ffmpeg
 ffmpeg
 fastapi
-pyrogram
 redis
 starlette
 uvicorn
