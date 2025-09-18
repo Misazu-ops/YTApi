@@ -161,7 +161,7 @@ docker rm yt-dlp-api
 # Update and restart
 docker stop yt-dlp-api && docker rm yt-dlp-api && docker rmi -f yt-dlp-api
 docker build --no-cache -t yt-dlp-api .
-docker run -d --name yt-dlp-api -p 8000:8000 --mount type=bind,source=$HOME/.config/google-chrome,target=/root/.config/google-chrome yt-dlp-api
+docker run -d --name yt-dlp-api --network web -e VIRTUAL_HOST=api.nub-coder.tech -e LETSENCRYPT_HOST=api.nub-coder.tech -e LETSENCRYPT_EMAIL=dev@nub-coder.tech yt-dlp-api
 ```
 
 ## Authentication
