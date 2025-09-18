@@ -157,9 +157,9 @@ exec tor -f /etc/tor/torrc
 docker build --no-cache -t yt-dlp-api .
 ```
 
-2. **Run with Chrome data mounting (recommended for cookie support):**
+2. **Run with production environment variables:**
 ```bash
-docker run -d --name yt-dlp-api -p 8000:8000 --mount type=bind,source=$HOME/.config/google-chrome,target=/root/.config/google-chrome yt-dlp-api
+docker run -d --name yt-dlp-api --network web -e VIRTUAL_HOST=api.nub-coder.tech -e LETSENCRYPT_HOST=api.nub-coder.tech -e LETSENCRYPT_EMAIL=dev@nub-coder.tech yt-dlp-api
 ```
 
 **Note about Chrome data mounting:**
