@@ -44,7 +44,7 @@ telegram_app = Client(
 def setup_bot_commands():
     """Set up bot commands menu"""
     from pyrogram.types import BotCommand
-    
+
     commands = [
         BotCommand("start", "🚀 Get your API token and welcome message"),
         BotCommand("menu", "📋 Show main menu with options"),
@@ -53,7 +53,7 @@ def setup_bot_commands():
         BotCommand("revoke", "🔄 Revoke your current token"),
         BotCommand("help", "❓ Get help and API documentation"),
     ]
-    
+
     try:
         telegram_app.set_bot_commands(commands)
         print("✅ Bot commands set successfully")
@@ -82,7 +82,7 @@ async def get_current_user(token: Optional[str] = Query(None)):
     """Get current user from token"""
     if not token:
         return None
-    
+
     try:
         user_id = get_user_by_token(token)
         return user_id
@@ -107,11 +107,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Skip rate limiting for search endpoints and health check
         if request.url.path in ["/", "/search", "/health", "/clear-cache", "/rate-limit-status"]:
             return await call_next(request)
-        
+
         # Check for token authentication from query parameter
         token = request.query_params.get("token")
         user_id = await get_current_user(token)
-        
+
         if not user_id:
             return JSONResponse(
                 status_code=401,
@@ -120,11 +120,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "message": "Please get your token from the Telegram bot using /start command and add it as ?token=YOUR_TOKEN"
                 }
             )
-        
+
         # Get user's request count and limit
         request_count = await get_user_request_count(user_id)
         user_limit = ADMIN_LIMIT if is_admin(user_id) else DAILY_LIMIT
-        
+
         # Check if user has exceeded daily limit
         if request_count >= user_limit:
             return JSONResponse(
@@ -136,20 +136,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "reset_time": "Resets at midnight UTC"
                 }
             )
-        
+
         # Process the request
         response = await call_next(request)
-        
+
         # Increment counter only for successful data requests (not errors)
         if response.status_code == 200:
             new_count = await increment_user_requests(user_id)
             remaining = user_limit - new_count
-            
+
             # Add rate limit headers to response
             response.headers["X-RateLimit-Limit"] = str(user_limit)
             response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
             response.headers["X-RateLimit-Reset"] = str(int((datetime.datetime.combine(datetime.date.today() + datetime.timedelta(days=1), datetime.time.min).timestamp())))
-        
+
         return response
 
 # Add the rate limiting middleware
@@ -175,10 +175,10 @@ def _extract_info(url: str):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-'proxy': 'socks5://127.0.0.1:9050',
-"extractor_args": {"youtube": {"player_client": ["android"]}},
+        'proxy': 'socks5://tor-custom:5090',
+        "extractor_args": {"youtube": {"player_client": ["android"]}},
 #        "cookiesfrombrowser": ("chrome",),
-        
+
         # Performance optimizations
         "extract_flat": False,  # We need full info
         "writethumbnail": False,
@@ -186,37 +186,37 @@ def _extract_info(url: str):
         "writedescription": False,
         "writesubtitles": False,
         "writeautomaticsub": False,
-        
+
         # Faster format selection
         "format_sort": ["res:720", "fps", "br"],
         "format_sort_force": True,
-        
+
         # Network optimizations  
         "http_chunk_size": 10485760,  # 10MB chunks
         "retries": 1,  # Reduce retries for speed
         "fragment_retries": 1,
-        
+
         # Skip unnecessary processing
         "skip_playlist_after_errors": 1,
     }
-    
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         return ydl.extract_info(url, download=False)
 
 def _search_videos(query: str, max_results: int = 1):
     """Search YouTube videos by query"""
     search_url = f"ytsearch{max_results}:{query}"
-    
+
     ydl_opts = {
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-'proxy': 'socks5://127.0.0.1:9050',
-"extractor_args": {"youtube": {"player_client": ["android"]}},
+        'proxy': 'socks5://tor-custom:5090',
+        "extractor_args": {"youtube": {"player_client": ["android"]}},
 #        "cookiesfrombrowser": ("chrome",),
         "extract_flat": True,  # Only get basic info for search
     }
-    
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         return ydl.extract_info(search_url, download=False)
 
@@ -228,7 +228,7 @@ def is_youtube_url(text: str) -> bool:
         r'(?:https?://)?(?:www\.)?youtube\.com/embed/[\w-]+',
         r'(?:https?://)?(?:m\.)?youtube\.com/watch\?v=[\w-]+',
     ]
-    
+
     for pattern in youtube_patterns:
         if re.match(pattern, text.strip()):
             return True
@@ -248,7 +248,7 @@ async def extract_video_info_async(url: str):
     """Run yt-dlp in thread pool to avoid blocking"""
     loop = asyncio.get_event_loop()
     cache_key = get_cache_key()
-    
+
     # Run in thread pool since yt-dlp is CPU/IO bound
     info = await loop.run_in_executor(
         executor, 
@@ -262,19 +262,19 @@ def extract_best_format_url(formats):
     """Optimized format URL extraction"""
     if not formats:
         return None
-    
+
     # Priority: combined format > video+audio > video only
     for f in formats:
         if (f.get("acodec") != "none" and 
             f.get("vcodec") != "none" and 
             f.get("url")):
             return f.get("url")
-    
+
     # Fallback to first available URL
     for f in formats:
         if f.get("url"):
             return f.get("url")
-    
+
     return None
 
 @app.get("/info")
@@ -285,15 +285,15 @@ async def video_info(
     user_id: int = Depends(require_token)
 ):
     start_time = time.time()
-    
+
     try:
         if is_youtube_url(q):
             # Handle as URL
             info = await extract_video_info_async(q)
             format_url = extract_best_format_url(info.get("formats", []))
-            
+
             elapsed = round(time.time() - start_time, 2)
-            
+
             return JSONResponse(content={
                 "query_type": "url",
                 "title": info.get("title"),
@@ -310,7 +310,7 @@ async def video_info(
             # Handle as search query
             loop = asyncio.get_event_loop()
             cache_key = get_cache_key()
-            
+
             search_results = await loop.run_in_executor(
                 executor,
                 get_cached_search_results,
@@ -318,18 +318,18 @@ async def video_info(
                 max_results,
                 cache_key
             )
-            
+
             # Get detailed info for each result
             if max_results == 1 and search_results.get("entries"):
                 # Single result - return detailed info
                 first_result = search_results["entries"][0]
                 video_url = first_result.get("url") or f"https://youtube.com/watch?v={first_result.get('id')}"
-                
+
                 detailed_info = await extract_video_info_async(video_url)
                 format_url = extract_best_format_url(detailed_info.get("formats", []))
-                
+
                 elapsed = round(time.time() - start_time, 2)
-                
+
                 return JSONResponse(content={
                     "query_type": "search",
                     "query": q,
@@ -346,7 +346,7 @@ async def video_info(
             else:
                 # Multiple results - return search list
                 elapsed = round(time.time() - start_time, 2)
-                
+
                 results = []
                 for entry in search_results.get("entries", []):
                     results.append({
@@ -358,7 +358,7 @@ async def video_info(
                         "youtube_link": f"https://youtube.com/watch?v={entry.get('id')}",
                         "thumbnail": entry.get("thumbnail")
                     })
-                
+
                 return JSONResponse(content={
                     "query_type": "search",
                     "query": q,
@@ -385,11 +385,11 @@ async def search_videos(
 ):
     """Search YouTube videos without getting detailed info - FREE (no rate limit)"""
     start_time = time.time()
-    
+
     try:
         loop = asyncio.get_event_loop()
         cache_key = get_cache_key()
-        
+
         search_results = await loop.run_in_executor(
             executor,
             get_cached_search_results,
@@ -397,9 +397,9 @@ async def search_videos(
             max_results,
             cache_key
         )
-        
+
         elapsed = round(time.time() - start_time, 2)
-        
+
         results = []
         for entry in search_results.get("entries", []):
             results.append({
@@ -411,14 +411,14 @@ async def search_videos(
                 "youtube_link": f"https://youtube.com/watch?v={entry.get('id')}",
                 "thumbnail": entry.get("thumbnails")
             })
-        
+
         return JSONResponse(content={
             "query": q,
             "results": results,
             "total_results": len(results),
             "time_taken": f"{elapsed} sec"
         })
-        
+
     except Exception as e:
         elapsed = round(time.time() - start_time, 2)
         return JSONResponse(
@@ -442,7 +442,7 @@ async def rate_limit_status(token: Optional[str] = Query(None, description="Your
         # Token-based user
         used = await get_user_request_count(user_id)
         limit = ADMIN_LIMIT if is_admin(user_id) else DAILY_LIMIT
-        
+
         return {
             "user_id": user_id,
             "daily_limit": limit,
