@@ -175,9 +175,8 @@ def _extract_info(url: str):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        'proxy': 'socks5://tor-custom:5090',
         "extractor_args": {"youtube": {"player_client": ["android"]}},
-#        "cookiesfrombrowser": ("chrome",),
+        "cookiesfrombrowser": ("chrome",),
 
         # Performance optimizations
         "extract_flat": False,  # We need full info
@@ -211,9 +210,8 @@ def _search_videos(query: str, max_results: int = 1):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        'proxy': 'socks5://tor-custom:5090',
         "extractor_args": {"youtube": {"player_client": ["android"]}},
-#        "cookiesfrombrowser": ("chrome",),
+        "cookiesfrombrowser": ("chrome",),
         "extract_flat": True,  # Only get basic info for search
     }
 
