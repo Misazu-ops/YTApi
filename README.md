@@ -127,32 +127,7 @@ The API will be available at `http://0.0.0.0:8000`
 
 ### Docker Installation
 
-1. **First, run a Tor proxy container for enhanced privacy:**
-```bash
-docker run -d \
---name tor-custom \
---network web \
--p 127.0.0.1:5090:5090 \
---dns 8.8.8.8 \
---dns 1.1.1.1 \
---restart always \
-alpine:latest \
-sh -c '
-apk add --no-cache tor curl &&
-echo "SocksPort 0.0.0.0:5090" > /etc/tor/torrc &&
-echo "NewCircuitPeriod 1" >> /etc/tor/torrc &&
-echo "MaxCircuitDirtiness 1" >> /etc/tor/torrc &&
-echo "CircuitBuildTimeout 10" >> /etc/tor/torrc &&
-echo "LearnCircuitBuildTimeout 0" >> /etc/tor/torrc &&
-echo "NumEntryGuards 8" >> /etc/tor/torrc &&
-echo "UseBridges 0" >> /etc/tor/torrc &&
-echo "ClientOnly 1" >> /etc/tor/torrc &&
-tor -f /etc/tor/torrc --verify-config &&
-exec tor -f /etc/tor/torrc
-'
-```
-
-2. **Build the Docker image:**
+1. **Build the Docker image:**
 ```bash
 docker build --no-cache -t yt-dlp-api .
 ```
