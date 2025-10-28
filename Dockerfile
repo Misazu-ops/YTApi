@@ -1,5 +1,5 @@
 
-FROM python:3.13.2
+FROM python:latest
 
 # Set working directory
 WORKDIR /app
