@@ -12,4 +12,3 @@ redis
 starlette
 uvicorn
 yt-dlp
-pyrogram>=2.0.106
