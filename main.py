@@ -168,14 +168,14 @@ def get_cached_info(url: str, cache_key: int):
     return _extract_info(url)
 
 def _extract_info(url: str):
-    """Extract only essential video information using Chrome cookies - optimized"""
+    """Extract only essential video information using Firefox cookies - optimized"""
     ydl_opts = {
         # Only get what we need - much faster
         "format": "best[height<=720]",  # Limit quality for faster processing
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        "cookiesfrombrowser": ("chrome",),
+        "cookiesfrombrowser": ("firefox",),
 
         # Performance optimizations
         "extract_flat": False,  # We need full info
@@ -209,7 +209,7 @@ def _search_videos(query: str, max_results: int = 1):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        "cookiesfrombrowser": ("chrome",),
+        "cookiesfrombrowser": ("firefox",),
         "extract_flat": True,  # Only get basic info for search
     }
 

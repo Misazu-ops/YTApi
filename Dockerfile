@@ -7,7 +7,12 @@ RUN apt-get update && apt-get install -y \
     curl \
     ffmpeg \
     git \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Deno runtime
+RUN curl -fsSL https://deno.land/install.sh | sh && \
+    mv /root/.deno/bin/deno /usr/local/bin/deno
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .

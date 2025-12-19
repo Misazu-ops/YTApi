@@ -19,9 +19,9 @@ services:
     # Uncomment the ports mapping if you want to access the service directly without a reverse-proxy
     #ports:
     #  - "8000:8000"
-    # Optional Chrome/Chromium profile mount for cookie support (read-only)
+    # Optional Firefox profile mount for cookie support (read-only)
     volumes:
-      - ${HOME}/.config/google-chrome:/root/.config/google-chrome:ro
+      - ${HOME}/.mozilla/firefox:/root/.mozilla/firefox:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
