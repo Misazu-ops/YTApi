@@ -19,8 +19,8 @@ import random
 from pyrogram import Client,idle
 
 # Telegram Bot Configuration
-API_ID = 21869707
-API_HASH = '31ec80a4adad7aaad9262e894e3654e6'
+API_ID = 2040
+API_HASH = 'b18441a1ff607e10a989891a5462e627'
 BOT_TOKEN = '8246299769:AAHD8gd49wwlMuq9lBXmKtCNOxWDFjKR694'
 GROUP = "nub_coder_s"
 CHANNEL = "nub_coders"
@@ -38,7 +38,12 @@ telegram_app = Client(
     api_id=API_ID, 
     api_hash=API_HASH, 
     bot_token=BOT_TOKEN,in_memory=True,
-    plugins=dict(root="plugins")
+    plugins=dict(root="plugins"),
+    device_model="Desktop",
+    system_version="Windows 10",
+    app_version="3.4.3 x64",
+    lang_code="en",
+    lang_pack="tdesktop"
 )
 
 def setup_bot_commands():
