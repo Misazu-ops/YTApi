@@ -19,8 +19,8 @@ import random
 from pyrogram import Client,idle
 
 # Telegram Bot Configuration
-API_ID = 2040
-API_HASH = 'b18441a1ff607e10a989891a5462e627'
+API_ID = 21856699
+API_HASH = '73f10cf0979637857170f03d4c86f251'
 BOT_TOKEN = '8246299769:AAHD8gd49wwlMuq9lBXmKtCNOxWDFjKR694'
 GROUP = "nub_coder_s"
 CHANNEL = "nub_coders"
