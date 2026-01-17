@@ -1,7 +1,7 @@
 fastapi
 setuptools
 uvicorn[standard]
-yt-dlp
+yt-dlp[default]
 kurigram
 redis
 tgcrypto
@@ -11,4 +11,4 @@ fastapi
 redis
 starlette
 uvicorn
-yt-dlp
+yt-dlp[default]
