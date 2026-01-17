@@ -175,8 +175,7 @@ def get_cached_info(url: str, cache_key: int):
 def _extract_info(url: str):
     """Extract only essential video information using Firefox cookies - optimized"""
     ydl_opts = {
-        # Only get what we need - much faster
-        "format": "best[height<=720]",  # Limit quality for faster processing
+        # Only gather metadata, no downloads
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
@@ -189,10 +188,6 @@ def _extract_info(url: str):
         "writedescription": False,
         "writesubtitles": False,
         "writeautomaticsub": False,
-
-        # Faster format selection
-        "format_sort": ["res:720", "fps", "br"],
-        "format_sort_force": True,
 
         # Network optimizations  
         "http_chunk_size": 10485760,  # 10MB chunks
