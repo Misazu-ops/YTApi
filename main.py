@@ -179,6 +179,7 @@ def _extract_info(url: str):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        "format": "best",
         "cookiesfrombrowser": ("firefox",),
 
         # Performance optimizations
@@ -209,6 +210,7 @@ def _search_videos(query: str, max_results: int = 1):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        "format": "best",
         "cookiesfrombrowser": ("firefox",),
         "extract_flat": True,  # Only get basic info for search
     }
