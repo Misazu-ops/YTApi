@@ -2,6 +2,7 @@ from pyrogram import filters
 from pyrogram.client import Client
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 import asyncio
+import time
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -89,6 +90,14 @@ async def menu_command(client: Client, message: Message):
         "Choose an option below:",
         reply_markup=keyboard
     )
+
+@Client.on_message(filters.command("ping"))
+async def ping_command(client: Client, message: Message):
+    """Measure and display bot latency"""
+    start = time.time()
+    sent = await message.reply_text("🏓 Pong!")
+    elapsed = round((time.time() - start) * 1000, 2)
+    await sent.edit_text(f"🏓 **Pong!**\n\n⚡ **Latency:** `{elapsed} ms`")
 
 @Client.on_callback_query()
 async def handle_callbacks(client: Client, callback_query: CallbackQuery):
