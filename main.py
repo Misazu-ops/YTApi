@@ -21,7 +21,7 @@ from pyrogram import Client,idle
 # Telegram Bot Configuration
 API_ID = 21856699
 API_HASH = '73f10cf0979637857170f03d4c86f251'
-BOT_TOKEN = '8246299769:AAHD8gd49wwlMuq9lBXmKtCNOxWDFjKR694'
+BOT_TOKEN = '8246299769:AAF2jRzQBJmkOqL_146jKG0EjWbeTSC78eU'
 GROUP = "nub_coder_s"
 CHANNEL = "nub_coders"
 
