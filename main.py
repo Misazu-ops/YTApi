@@ -180,7 +180,7 @@ def _extract_info(url: str):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        "format": "best",
+        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
         "cookiesfrombrowser": ("firefox",),
 
         # Performance optimizations
@@ -211,7 +211,7 @@ def _search_videos(query: str, max_results: int = 1):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        "format": "best",
+        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
         "cookiesfrombrowser": ("firefox",),
         "extract_flat": True,  # Only get basic info for search
     }
@@ -258,34 +258,49 @@ async def extract_video_info_async(url: str):
     return info
 
 def extract_best_format(formats):
-    """Pick a direct, progressive MP4 when possible and return url + headers"""
+    """Return best quality video+audio URLs. Handles both progressive and DASH streams."""
     if not formats:
-        return None, {}
+        return None, None, {}
 
-    def has_av_and_http(f):
+    def is_video_only(f):
+        return f.get("vcodec") != "none" and f.get("acodec") == "none" and f.get("url")
+
+    def is_audio_only(f):
+        return f.get("acodec") != "none" and f.get("vcodec") == "none" and f.get("url")
+
+    def is_progressive(f):
         return (
             f.get("acodec") != "none"
             and f.get("vcodec") != "none"
-            and str(f.get("protocol", "")).startswith("http")
             and f.get("url")
         )
 
-    # Prefer progressive MP4 (most universally playable)
-    for f in formats:
-        if has_av_and_http(f) and f.get("ext") == "mp4":
-            return f.get("url"), f.get("http_headers", {})
+    # Sort formats by quality (height desc, then tbr desc)
+    sorted_formats = sorted(
+        formats,
+        key=lambda f: (f.get("height") or 0, f.get("tbr") or 0),
+        reverse=True
+    )
 
-    # Next: any HTTP progressive (audio+video)
-    for f in formats:
-        if has_av_and_http(f):
-            return f.get("url"), f.get("http_headers", {})
+    # Try to find best separate video + audio (DASH - highest quality)
+    best_video = next((f for f in sorted_formats if is_video_only(f)), None)
+    best_audio = next((f for f in sorted_formats if is_audio_only(f)), None)
 
-    # Fallback: first available URL
-    for f in formats:
-        if f.get("url"):
-            return f.get("url"), f.get("http_headers", {})
+    if best_video and best_audio:
+        headers = best_video.get("http_headers", {})
+        return best_video.get("url"), best_audio.get("url"), headers
 
-    return None, {}
+    # Fallback: best progressive (single file, audio+video)
+    best_progressive = next((f for f in sorted_formats if is_progressive(f)), None)
+    if best_progressive:
+        return best_progressive.get("url"), None, best_progressive.get("http_headers", {})
+
+    # Last resort: first available URL
+    first = next((f for f in formats if f.get("url")), None)
+    if first:
+        return first.get("url"), None, first.get("http_headers", {})
+
+    return None, None, {}
 
 @app.get("/info")
 async def video_info(
@@ -300,7 +315,7 @@ async def video_info(
         if is_youtube_url(q):
             # Handle as URL
             info = await extract_video_info_async(q)
-            format_url, format_headers = extract_best_format(info.get("formats", []))
+            video_url, audio_url, format_headers = extract_best_format(info.get("formats", []))
 
             elapsed = round(time.time() - start_time, 2)
 
@@ -312,7 +327,8 @@ async def video_info(
                 "channel_name": info.get("uploader"),
                 "views": info.get("view_count"),
                 "video_id": info.get("id"),
-                "url": format_url,
+                "video_url": video_url,
+                "audio_url": audio_url,
                 "headers": format_headers,
                 "thumbnail": info.get("thumbnail"),
                 "time_taken": f"{elapsed} sec"
@@ -337,7 +353,7 @@ async def video_info(
                 video_url = first_result.get("url") or f"https://youtube.com/watch?v={first_result.get('id')}"
 
                 detailed_info = await extract_video_info_async(video_url)
-                format_url, format_headers = extract_best_format(detailed_info.get("formats", []))
+                d_video_url, d_audio_url, format_headers = extract_best_format(detailed_info.get("formats", []))
 
                 elapsed = round(time.time() - start_time, 2)
 
@@ -350,7 +366,8 @@ async def video_info(
                     "channel_name": detailed_info.get("uploader"),
                     "views": detailed_info.get("view_count"),
                     "video_id": detailed_info.get("id"),
-                    "url": format_url,
+                    "video_url": d_video_url,
+                    "audio_url": d_audio_url,
                     "headers": format_headers,
                     "thumbnail": detailed_info.get("thumbnail"),
                     "time_taken": f"{elapsed} sec"
