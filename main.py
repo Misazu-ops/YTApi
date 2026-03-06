@@ -205,7 +205,6 @@ def _extract_info(url: str):
         "extractor_args": {
             "youtube": {
                 "skip": ["translated_subs"],
-                "player_skip": ["webpage", "js"],
             }
         },
     }
