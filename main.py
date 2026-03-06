@@ -162,7 +162,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 app.add_middleware(RateLimitMiddleware)
 
 # Thread pool for CPU-bound operations
-executor = ThreadPoolExecutor(max_workers=4)
+executor = ThreadPoolExecutor(max_workers=8)
+
+# Cookies file path (exported from Firefox by entrypoint.sh)
+COOKIES_FILE = "/app/cookies/cookies.txt"
+import os
+_cookie_opt = {"cookiefile": COOKIES_FILE} if os.path.exists(COOKIES_FILE) else {"cookiesfrombrowser": ("firefox",)}
 
 # Disable yt-dlp logging for better performance
 logging.getLogger('yt_dlp').setLevel(logging.ERROR)
@@ -176,28 +181,33 @@ def get_cached_info(url: str, cache_key: int):
 def _extract_info(url: str):
     """Extract only essential video information using Firefox cookies - optimized"""
     ydl_opts = {
-        # Only gather metadata, no downloads
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
         "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
-        "cookiesfrombrowser": ("firefox",),
+        **_cookie_opt,
 
-        # Performance optimizations
-        "extract_flat": False,  # We need full info
+        # Skip unnecessary metadata
+        "extract_flat": False,
         "writethumbnail": False,
         "writeinfojson": False,
         "writedescription": False,
         "writesubtitles": False,
         "writeautomaticsub": False,
+        "noplaylist": True,
 
-        # Network optimizations  
-        "http_chunk_size": 10485760,  # 10MB chunks
-        "retries": 1,  # Reduce retries for speed
+        # Speed tweaks
+        "retries": 1,
         "fragment_retries": 1,
-
-        # Skip unnecessary processing
+        "socket_timeout": 10,
+        "geo_bypass": True,
         "skip_playlist_after_errors": 1,
+        "extractor_args": {
+            "youtube": {
+                "skip": ["translated_subs"],
+                "player_skip": ["webpage", "js"],
+            }
+        },
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -212,8 +222,11 @@ def _search_videos(query: str, max_results: int = 1):
         "no_warnings": True,
         "skip_download": True,
         "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
-        "cookiesfrombrowser": ("firefox",),
+        **_cookie_opt,
         "extract_flat": True,  # Only get basic info for search
+        "socket_timeout": 10,
+        "geo_bypass": True,
+        "noplaylist": True,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
