@@ -184,7 +184,7 @@ def _extract_info(url: str):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=webm]+bestaudio[ext=webm]/bestvideo+bestaudio/best",
         **_cookie_opt,
 
         # Skip unnecessary metadata
@@ -220,7 +220,7 @@ def _search_videos(query: str, max_results: int = 1):
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
-        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=webm]+bestaudio[ext=webm]/bestvideo+bestaudio/best",
         **_cookie_opt,
         "extract_flat": True,  # Only get basic info for search
         "socket_timeout": 10,
