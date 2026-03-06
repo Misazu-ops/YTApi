@@ -223,6 +223,7 @@ def _search_videos(query: str, max_results: int = 1):
     search_url = f"ytsearch{max_results}:{query}"
 
     ydl_opts = {
+
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
@@ -329,7 +330,11 @@ async def video_info(
         if is_youtube_url(q):
             # Handle as URL
             info = await extract_video_info_async(q)
-            url, format_headers = extract_best_format(info.get("formats", []))
+            mode = Query("combined", description="Mode: 'combined' for audio+video, 'audio' for audio-only", regex="^(combined|audio)$")
+            if mode == "audio":
+                url, format_headers = extract_audio_format(info.get("formats", []))
+            else:
+                url, format_headers = extract_best_format(info.get("formats", []))
 
             elapsed = round(time.time() - start_time, 2)
 
@@ -366,7 +371,10 @@ async def video_info(
                 video_url = first_result.get("url") or f"https://youtube.com/watch?v={first_result.get('id')}"
 
                 detailed_info = await extract_video_info_async(video_url)
-                url, format_headers = extract_best_format(detailed_info.get("formats", []))
+                if mode == "audio":
+                    url, format_headers = extract_audio_format(detailed_info.get("formats", []))
+                else:
+                    url, format_headers = extract_best_format(detailed_info.get("formats", []))
 
                 elapsed = round(time.time() - start_time, 2)
 
