@@ -28,8 +28,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-RUN echo '#!/bin/bash\nif [ -d ".git" ]; then\n  echo "Pulling latest changes..."\n  git pull\nfi\necho "Starting application..."\npython3 main.py' > start.sh && \
-    chmod +x start.sh
-
 # Default command
-CMD ["./start.sh"]
+CMD ["python3", "main.py"]

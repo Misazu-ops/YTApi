@@ -66,9 +66,15 @@ def setup_bot_commands():
     except Exception as e:
         print(f"⚠️ Failed to set bot commands: {e}")
 
-telegram_app.start()
-setup_bot_commands()
-telegram_app.stop()
+try:
+    telegram_app.start()
+    setup_bot_commands()
+    telegram_app.stop()
+except Exception as e:
+    print(f"Bot setup skipped (will retry at runtime): {e}")
+
+
+
 
 
 
@@ -524,9 +530,16 @@ def start_services():
 if __name__ == "__main__":
     try:
         import asyncio
-        threading.Thread(target=start_services).start()
-        telegram_app.run()
+        threading.Thread(target=start_services, daemon=True).start()
+        try:
+            telegram_app.run()
+        except Exception as e:
+            print(f"Bot failed: {e}, API still running...")
+            # Keep main thread alive so the daemon API thread keeps running
+            import time as _time
+            while True:
+                _time.sleep(3600)
     except KeyboardInterrupt:
-        print("🛑 Services stopped by user")
+        print("Services stopped by user")
     except Exception as e:
-        print(f"❌ Error starting services: {e}")
+        print(f"Error starting services: {e}")
