@@ -177,7 +177,7 @@ async def read_root():
             "/search": "Search songs via scrape or YouTube Data API (FREE)",
             "/trending": "Get trending music (FREE)",
             "/suggest": "Get song suggestions for a query (FREE)",
-            "/stream": "Get audio/video/combined stream URL (token required)",
+            "/stream": "Get audio or video stream URL (token required)",
             "/video-stream": "Get separate video + audio URLs (token required)",
             "/info": "Search + stream URL in one call (token required)",
             "/playlist": "Get all songs from a YouTube playlist (token required)",
@@ -235,7 +235,7 @@ async def search_songs(
 @app.get("/stream")
 async def get_stream_url(
     q: str = Query(..., description="YouTube video URL"),
-    mode: str = Query("audio", description="Mode: 'audio', 'video', or 'combined'"),
+    mode: str = Query("audio", description="Mode: 'audio' or 'video'"),
     token: str = Query(..., description="Your API token"),
     user_id: int = Depends(require_token)
 ):
@@ -244,31 +244,11 @@ async def get_stream_url(
     Modes:
     - `audio`: Best audio stream (m4a)
     - `video`: Best combined video+audio (mp4, 360p)
-    - `combined`: Separate best video + best audio URLs for client-side merging
     """
     start_time = time.time()
 
     try:
-        if mode == "combined":
-            from YouTubeMusic.Video_Stream import get_video_audio_urls
-            video_url, audio_url = await get_video_audio_urls(q)
-            elapsed = round(time.time() - start_time, 2)
-
-            if video_url and audio_url:
-                return JSONResponse(content={
-                    "url": q,
-                    "mode": "combined",
-                    "video_url": video_url,
-                    "audio_url": audio_url,
-                    "time_taken": f"{elapsed} sec"
-                })
-            else:
-                return JSONResponse(
-                    content={"error": "Failed to extract video+audio URLs", "time_taken": f"{elapsed} sec"},
-                    status_code=500
-                )
-
-        elif mode == "video":
+        if mode == "video":
             from YouTubeMusic.Stream import get_video_stream
             stream_url = await get_video_stream(q)
         else:
