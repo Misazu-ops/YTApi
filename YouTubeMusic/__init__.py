@@ -6,7 +6,7 @@ from .Models import format_dur, process_video, extract_artist
 from .Utils import parse_dur, format_ind, format_views
 
 __version__ = "2026.3.05"
-__author__ = "ABHISHEK THAKUR"
+__author__ = "DEBLOMPER"
 
 __all__ = [
     "YtSearch",

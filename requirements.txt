@@ -1,4 +1,10 @@
 aiohttp
 beautifulsoup4
-httpx>=0.25.0
+httpx[http2]>=0.25.0
 orjson>=3.9.0
+fastapi
+uvicorn[standard]
+kurigram
+redis
+tgcrypto
+yt-dlp[default]

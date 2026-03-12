@@ -29,6 +29,7 @@ def setup_bot_commands():
     commands = [
         BotCommand("start", "🚀 Get your API token and welcome message"),
         BotCommand("menu", "📋 Show main menu with options"),
+        BotCommand("ping", "🏓 Check bot latency"),
         BotCommand("status", "📊 Check your usage statistics"),
         BotCommand("token", "🔑 View your current API token"),
         BotCommand("revoke", "🔄 Revoke your current token"),

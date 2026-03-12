@@ -11,7 +11,7 @@ requires-python = ">=3.8"
 license = { text = "MIT" }
 
 authors = [
-  { name = "ABHISHEK THAKUR", email = "abhishekbanshiwal2005@gmail.com" }
+  { name = "DEBLOMPER", email = "dev@nubcoder.com" }
 ]
 
 keywords = [

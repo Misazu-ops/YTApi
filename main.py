@@ -1,22 +1,15 @@
-from fastapi import FastAPI, Query, BackgroundTasks, Request, HTTPException, Header, Depends
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, Query, Request, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-import yt_dlp
 import time
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
 import logging
-import re
-from collections import defaultdict
 import datetime
 from typing import Optional
+from collections import defaultdict
 import uvicorn
 import threading
-import redis
-import string
-import random
-from pyrogram import Client,idle
+from pyrogram import Client, idle
 
 # Telegram Bot Configuration
 API_ID = 21856699
@@ -27,17 +20,17 @@ CHANNEL = "nub_coders"
 
 # Import shared tools
 from tools import (
-    redis_client, generate_token, is_admin, get_user_token, 
+    redis_client, generate_token, is_admin, get_user_token,
     set_user_token, revoke_user_token, get_user_by_token,
     get_user_request_count, set_user_request_count, increment_user_requests
 )
 
 # Initialize Pyrogram client with plugins
 telegram_app = Client(
-    "ytdlp_bot", 
-    api_id=API_ID, 
-    api_hash=API_HASH, 
-    bot_token=BOT_TOKEN,in_memory=True,
+    "ytdlp_bot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN, in_memory=True,
     plugins=dict(root="plugins"),
     device_model="Desktop",
     system_version="Windows 10",
@@ -74,32 +67,29 @@ except Exception as e:
     print(f"Bot setup skipped (will retry at runtime): {e}")
 
 
+# ─────────────────────────── FastAPI ───────────────────────────
 
+app = FastAPI(
+    title="YouTubeMusic API",
+    description="API for YouTube Music search, streaming, and playlist extraction with Telegram bot integration"
+)
 
-
-
-app = FastAPI(title="yt-dlp API", description="Optimized API for YouTube info with cookies support and Telegram bot integration")
-
-@app.get("/")
-async def read_root():
-    """Serve the main webpage"""
-    return FileResponse("index.html")
-
-# Rate limiting storage - tracks daily requests per IP (fallback)
+# Rate limiting
 daily_request_counts = defaultdict(lambda: {"count": 0, "date": datetime.date.today()})
 DAILY_LIMIT = 1000
 ADMIN_LIMIT = 10000
+
 
 async def get_current_user(token: Optional[str] = Query(None)):
     """Get current user from token"""
     if not token:
         return None
-
     try:
         user_id = get_user_by_token(token)
         return user_id
     except:
         return None
+
 
 async def require_token(token: Optional[str] = Query(None, description="Your API token")):
     """Require valid token for protected endpoints"""
@@ -114,13 +104,16 @@ async def require_token(token: Optional[str] = Query(None, description="Your API
         )
     return user_id
 
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Skip rate limiting for search endpoints and health check
-        if request.url.path in ["/", "/search", "/health", "/clear-cache", "/rate-limit-status"]:
+        # Skip rate limiting for free endpoints
+        free_paths = ["/", "/search", "/trending", "/suggest", "/health",
+                      "/version", "/rate-limit-status", "/docs", "/openapi.json"]
+        if request.url.path in free_paths:
             return await call_next(request)
 
-        # Check for token authentication from query parameter
+        # Check for token authentication
         token = request.query_params.get("token")
         user_id = await get_current_user(token)
 
@@ -137,7 +130,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         request_count = await get_user_request_count(user_id)
         user_limit = ADMIN_LIMIT if is_admin(user_id) else DAILY_LIMIT
 
-        # Check if user has exceeded daily limit
+        # Check rate limit
         if request_count >= user_limit:
             return JSONResponse(
                 status_code=429,
@@ -152,262 +145,277 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Process the request
         response = await call_next(request)
 
-        # Increment counter only for successful data requests (not errors)
+        # Increment counter only for successful requests
         if response.status_code == 200:
             new_count = await increment_user_requests(user_id)
             remaining = user_limit - new_count
 
-            # Add rate limit headers to response
             response.headers["X-RateLimit-Limit"] = str(user_limit)
             response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
-            response.headers["X-RateLimit-Reset"] = str(int((datetime.datetime.combine(datetime.date.today() + datetime.timedelta(days=1), datetime.time.min).timestamp())))
+            response.headers["X-RateLimit-Reset"] = str(
+                int(datetime.datetime.combine(
+                    datetime.date.today() + datetime.timedelta(days=1),
+                    datetime.time.min
+                ).timestamp())
+            )
 
         return response
 
-# Add the rate limiting middleware
+
 app.add_middleware(RateLimitMiddleware)
 
-# Thread pool for CPU-bound operations
-executor = ThreadPoolExecutor(max_workers=8)
 
-# Cookies file path (exported from Firefox by entrypoint.sh)
-COOKIES_FILE = "/app/cookies/cookies.txt"
-import os
-_cookie_opt = {"cookiefile": COOKIES_FILE} if os.path.exists(COOKIES_FILE) else {"cookiesfrombrowser": ("firefox",)}
+# ─────────────────────────── Endpoints ───────────────────────────
 
-# Disable yt-dlp logging for better performance
-logging.getLogger('yt_dlp').setLevel(logging.ERROR)
-
-# Cache video info for 5 minutes to avoid repeated requests
-@lru_cache(maxsize=100)
-def get_cached_info(url: str, cache_key: int):
-    """Cache wrapper - cache_key changes every 5 minutes"""
-    return _extract_info(url)
-
-def _extract_info(url: str):
-    """Extract only essential video information using Firefox cookies - optimized"""
-    ydl_opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "skip_download": True,
-        "format": "best/bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio",
-        **_cookie_opt,
-
-        # Skip unnecessary metadata
-        "extract_flat": False,
-        "writethumbnail": False,
-        "writeinfojson": False,
-        "writedescription": False,
-        "writesubtitles": False,
-        "writeautomaticsub": False,
-        "noplaylist": True,
-
-        # Speed tweaks
-        "retries": 1,
-        "fragment_retries": 1,
-        "socket_timeout": 10,
-        "geo_bypass": True,
-        "skip_playlist_after_errors": 1,
-        "extractor_args": {
-            "youtube": {
-                "skip": ["translated_subs"],
-            }
+@app.get("/")
+async def read_root():
+    """API welcome page"""
+    return {
+        "name": "YouTubeMusic API",
+        "version": "2026.3.12",
+        "endpoints": {
+            "/search": "Search songs via scrape or YouTube Data API (FREE)",
+            "/trending": "Get trending music (FREE)",
+            "/suggest": "Get song suggestions for a query (FREE)",
+            "/stream": "Get audio/video/combined stream URL (token required)",
+            "/video-stream": "Get separate video + audio URLs (token required)",
+            "/info": "Search + stream URL in one call (token required)",
+            "/playlist": "Get all songs from a YouTube playlist (token required)",
+            "/version": "Check library version info (FREE)",
+            "/health": "Health check (FREE)",
+            "/rate-limit-status": "Check your rate limit usage",
         },
+        "free_endpoints": ["/search", "/trending", "/suggest", "/version", "/health"],
+        "auth": "Get your token from the Telegram bot @ytdlp_nub_bot using /start"
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        return ydl.extract_info(url, download=False)
 
-def _search_videos(query: str, max_results: int = 1):
-    """Search YouTube videos by query"""
-    search_url = f"ytsearch{max_results}:{query}"
+@app.get("/search")
+async def search_songs(
+    q: str = Query(..., description="Search query"),
+    limit: int = Query(5, description="Number of results", ge=1, le=20),
+    method: str = Query("scrape", description="Search method: 'scrape' (free) or 'api' (uses YouTube Data API)")
+):
+    """Search YouTube for songs — FREE (no token required)"""
+    start_time = time.time()
 
-    ydl_opts = {
+    try:
+        if method == "api":
+            from YouTubeMusic.YtSearch import Search as YtApiSearch
+            results = await YtApiSearch(q, limit=limit)
+            elapsed = round(time.time() - start_time, 2)
+            return JSONResponse(content={
+                "query": q,
+                "method": "youtube_data_api",
+                "results": results,
+                "total_results": len(results),
+                "time_taken": f"{elapsed} sec"
+            })
+        else:
+            from YouTubeMusic.Search import Search
+            data = await Search(q, limit=limit)
+            elapsed = round(time.time() - start_time, 2)
+            return JSONResponse(content={
+                "query": q,
+                "method": "scrape",
+                "results": data.get("main_results", []),
+                "suggested": data.get("suggested", []),
+                "total_results": len(data.get("main_results", [])),
+                "time_taken": f"{elapsed} sec"
+            })
 
-        "quiet": True,
-        "no_warnings": True,
-        "skip_download": True,
-        "format": "best/bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio",
-        **_cookie_opt,
-        "extract_flat": True,  # Only get basic info for search
-        "socket_timeout": 10,
-        "geo_bypass": True,
-        "noplaylist": True,
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        return ydl.extract_info(search_url, download=False)
-
-def is_youtube_url(text: str) -> bool:
-    """Check if text is a YouTube URL"""
-    youtube_patterns = [
-        r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=[\w-]+',
-        r'(?:https?://)?(?:www\.)?youtu\.be/[\w-]+',
-        r'(?:https?://)?(?:www\.)?youtube\.com/embed/[\w-]+',
-        r'(?:https?://)?(?:m\.)?youtube\.com/watch\?v=[\w-]+',
-    ]
-
-    for pattern in youtube_patterns:
-        if re.match(pattern, text.strip()):
-            return True
-    return False
-
-# Cache search results for 10 minutes
-@lru_cache(maxsize=50)
-def get_cached_search_results(query: str, max_results: int, cache_key: int):
-    """Cache wrapper for search results"""
-    return _search_videos(query, max_results)
-
-def get_cache_key():
-    """Generate cache key that changes every 5 minutes"""
-    return int(time.time() // 300)  # 300 seconds = 5 minutes
-
-async def extract_video_info_async(url: str):
-    """Run yt-dlp in thread pool to avoid blocking"""
-    loop = asyncio.get_event_loop()
-    cache_key = get_cache_key()
-
-    # Run in thread pool since yt-dlp is CPU/IO bound
-    info = await loop.run_in_executor(
-        executor, 
-        get_cached_info, 
-        url, 
-        cache_key
-    )
-    return info
-
-def extract_best_format(formats):
-    """Pick the best combined (progressive) stream URL"""
-    if not formats:
-        return None, {}
-
-    def is_progressive(f):
-        ext = (f.get("ext") or "").lower()
-        if ext in {"mhtml", "json", "jpg", "webp", "png"}:
-            return False
-        return (
-            f.get("acodec") != "none"
-            and f.get("vcodec") != "none"
-            and str(f.get("protocol", "")).startswith("http")
-            and f.get("url")
+    except Exception as e:
+        elapsed = round(time.time() - start_time, 2)
+        return JSONResponse(
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
+            status_code=400
         )
 
-    sorted_formats = sorted(
-        formats,
-        key=lambda f: (f.get("height") or 0, f.get("tbr") or 0),
-        reverse=True
-    )
 
-    # Prefer best combined MP4 progressive stream
-    best_mp4 = next((f for f in sorted_formats if is_progressive(f) and f.get("ext") == "mp4"), None)
-    if best_mp4:
-        return best_mp4.get("url"), best_mp4.get("http_headers", {})
+@app.get("/stream")
+async def get_stream_url(
+    q: str = Query(..., description="YouTube video URL"),
+    mode: str = Query("audio", description="Mode: 'audio', 'video', or 'combined'"),
+    token: str = Query(..., description="Your API token"),
+    user_id: int = Depends(require_token)
+):
+    """Get stream URL for a YouTube video.
 
-    # Then any progressive format
-    best_prog = next((f for f in sorted_formats if is_progressive(f)), None)
-    if best_prog:
-        return best_prog.get("url"), best_prog.get("http_headers", {})
+    Modes:
+    - `audio`: Best audio stream (m4a)
+    - `video`: Best combined video+audio (mp4, 360p)
+    - `combined`: Separate best video + best audio URLs for client-side merging
+    """
+    start_time = time.time()
 
-    # Last resort
-    first = next((f for f in formats if f.get("url") and (f.get("ext") or "") not in {"mhtml"}), None)
-    if first:
-        return first.get("url"), first.get("http_headers", {})
+    try:
+        if mode == "combined":
+            from YouTubeMusic.Video_Stream import get_video_audio_urls
+            video_url, audio_url = await get_video_audio_urls(q)
+            elapsed = round(time.time() - start_time, 2)
 
-    return None, {}
+            if video_url and audio_url:
+                return JSONResponse(content={
+                    "url": q,
+                    "mode": "combined",
+                    "video_url": video_url,
+                    "audio_url": audio_url,
+                    "time_taken": f"{elapsed} sec"
+                })
+            else:
+                return JSONResponse(
+                    content={"error": "Failed to extract video+audio URLs", "time_taken": f"{elapsed} sec"},
+                    status_code=500
+                )
 
-    return None, None, {}
+        elif mode == "video":
+            from YouTubeMusic.Stream import get_video_stream
+            stream_url = await get_video_stream(q)
+        else:
+            from YouTubeMusic.Stream import get_stream
+            stream_url = await get_stream(q)
+
+        elapsed = round(time.time() - start_time, 2)
+
+        if stream_url:
+            return JSONResponse(content={
+                "url": q,
+                "mode": mode,
+                "stream_url": stream_url,
+                "time_taken": f"{elapsed} sec"
+            })
+        else:
+            return JSONResponse(
+                content={"error": "Failed to extract stream URL", "time_taken": f"{elapsed} sec"},
+                status_code=500
+            )
+
+    except Exception as e:
+        elapsed = round(time.time() - start_time, 2)
+        return JSONResponse(
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
+            status_code=400
+        )
+
+
+@app.get("/video-stream")
+async def video_stream_urls(
+    q: str = Query(..., description="YouTube video URL"),
+    token: str = Query(..., description="Your API token"),
+    user_id: int = Depends(require_token)
+):
+    """Get separate best-quality video and audio URLs.
+
+    Returns two URLs: bestvideo (mp4) + bestaudio (m4a).
+    Use these with ffmpeg or a player that supports dual-source playback.
+    """
+    start_time = time.time()
+
+    try:
+        from YouTubeMusic.Video_Stream import get_video_audio_urls
+        video_url, audio_url = await get_video_audio_urls(q)
+        elapsed = round(time.time() - start_time, 2)
+
+        if video_url and audio_url:
+            return JSONResponse(content={
+                "url": q,
+                "video_url": video_url,
+                "audio_url": audio_url,
+                "time_taken": f"{elapsed} sec"
+            })
+        else:
+            return JSONResponse(
+                content={"error": "Failed to extract video+audio URLs", "time_taken": f"{elapsed} sec"},
+                status_code=500
+            )
+
+    except Exception as e:
+        elapsed = round(time.time() - start_time, 2)
+        return JSONResponse(
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
+            status_code=400
+        )
+
 
 @app.get("/info")
 async def video_info(
     q: str = Query(..., description="YouTube video URL or search query"),
     max_results: int = Query(1, description="Max results for search queries", ge=1, le=10),
+    mode: str = Query("audio", description="Mode: 'audio' for audio-only, 'video' for video stream"),
     token: str = Query(..., description="Your API token"),
     user_id: int = Depends(require_token)
 ):
+    """Get video info + stream URL (token required)"""
     start_time = time.time()
 
     try:
-        if is_youtube_url(q):
-            # Handle as URL
-            info = await extract_video_info_async(q)
-            mode = Query("combined", description="Mode: 'combined' for audio+video, 'audio' for audio-only", regex="^(combined|audio)$")
-            if mode == "audio":
-                url, format_headers = extract_audio_format(info.get("formats", []))
+        # Check if it's a YouTube URL
+        import re
+        yt_url_pattern = re.compile(r'(youtube\.com|youtu\.be)')
+        is_url = bool(yt_url_pattern.search(q))
+
+        if is_url:
+            # Direct URL — get stream
+            if mode == "video":
+                from YouTubeMusic.Stream import get_video_stream
+                stream_url = await get_video_stream(q)
             else:
-                url, format_headers = extract_best_format(info.get("formats", []))
+                from YouTubeMusic.Stream import get_stream
+                stream_url = await get_stream(q)
+
+            # Also get search info for title/details
+            from YouTubeMusic.Search import Search
+            search_data = await Search(q.split("v=")[-1].split("&")[0] if "v=" in q else q, limit=1)
+            info = search_data.get("main_results", [{}])[0] if search_data.get("main_results") else {}
 
             elapsed = round(time.time() - start_time, 2)
-
             return JSONResponse(content={
                 "query_type": "url",
                 "title": info.get("title"),
                 "duration": info.get("duration"),
-                "youtube_link": info.get("webpage_url"),
-                "channel_name": info.get("uploader"),
-                "views": info.get("view_count"),
-                "video_id": info.get("id"),
-                "url": url,
-                "headers": format_headers,
+                "youtube_link": q,
+                "channel_name": info.get("channel"),
+                "views": info.get("views"),
+                "video_id": info.get("video_id"),
+                "stream_url": stream_url,
                 "thumbnail": info.get("thumbnail"),
                 "time_taken": f"{elapsed} sec"
             })
         else:
-            # Handle as search query
-            loop = asyncio.get_event_loop()
-            cache_key = get_cache_key()
+            # Search query
+            from YouTubeMusic.Search import Search
+            search_data = await Search(q, limit=max_results)
 
-            search_results = await loop.run_in_executor(
-                executor,
-                get_cached_search_results,
-                q,
-                max_results,
-                cache_key
-            )
+            if max_results == 1 and search_data.get("main_results"):
+                # Single result — also get stream URL
+                result = search_data["main_results"][0]
+                video_url = result.get("url", "")
 
-            # Get detailed info for each result
-            if max_results == 1 and search_results.get("entries"):
-                # Single result - return detailed info
-                first_result = search_results["entries"][0]
-                video_url = first_result.get("url") or f"https://youtube.com/watch?v={first_result.get('id')}"
-
-                detailed_info = await extract_video_info_async(video_url)
-                if mode == "audio":
-                    url, format_headers = extract_audio_format(detailed_info.get("formats", []))
+                if mode == "video":
+                    from YouTubeMusic.Stream import get_video_stream
+                    stream_url = await get_video_stream(video_url)
                 else:
-                    url, format_headers = extract_best_format(detailed_info.get("formats", []))
+                    from YouTubeMusic.Stream import get_stream
+                    stream_url = await get_stream(video_url)
 
                 elapsed = round(time.time() - start_time, 2)
-
                 return JSONResponse(content={
                     "query_type": "search",
                     "query": q,
-                    "title": detailed_info.get("title"),
-                    "duration": detailed_info.get("duration"),
-                    "youtube_link": detailed_info.get("webpage_url"),
-                    "channel_name": detailed_info.get("uploader"),
-                    "views": detailed_info.get("view_count"),
-                    "video_id": detailed_info.get("id"),
-                    "url": url,
-                    "headers": format_headers,
-                    "thumbnail": detailed_info.get("thumbnail"),
+                    "title": result.get("title"),
+                    "duration": result.get("duration"),
+                    "youtube_link": result.get("url"),
+                    "channel_name": result.get("channel"),
+                    "views": result.get("views"),
+                    "video_id": result.get("video_id"),
+                    "stream_url": stream_url,
+                    "thumbnail": result.get("thumbnail"),
                     "time_taken": f"{elapsed} sec"
                 })
             else:
-                # Multiple results - return search list
+                # Multiple results — return list only
                 elapsed = round(time.time() - start_time, 2)
-
-                results = []
-                for entry in search_results.get("entries", []):
-                    results.append({
-                        "title": entry.get("title"),
-                        "video_id": entry.get("id"),
-                        "channel_name": entry.get("uploader"),
-                        "duration": entry.get("duration"),
-                        "views": entry.get("view_count"),
-                        "youtube_link": f"https://youtube.com/watch?v={entry.get('id')}",
-                        "thumbnail": entry.get("thumbnail")
-                    })
-
+                results = search_data.get("main_results", [])
                 return JSONResponse(content={
                     "query_type": "search",
                     "query": q,
@@ -419,47 +427,49 @@ async def video_info(
     except Exception as e:
         elapsed = round(time.time() - start_time, 2)
         return JSONResponse(
-            content={
-                "error": str(e),
-                "time_taken": f"{elapsed} sec"
-            }, 
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
             status_code=400
         )
 
-# Optional: Search-only endpoint
-@app.get("/search")
-async def search_videos(
-    q: str = Query(..., description="Search query"),
-    max_results: int = Query(1, description="Number of results to return", ge=1, le=20)
+
+@app.get("/trending")
+async def trending_songs(
+    limit: int = Query(10, description="Number of trending songs", ge=1, le=20)
 ):
-    """Search YouTube videos without getting detailed info - FREE (no rate limit)"""
+    """Get trending songs — FREE (no token required)"""
     start_time = time.time()
 
     try:
-        loop = asyncio.get_event_loop()
-        cache_key = get_cache_key()
-
-        search_results = await loop.run_in_executor(
-            executor,
-            get_cached_search_results,
-            q,
-            max_results,
-            cache_key
-        )
-
+        from YouTubeMusic.Search import Trending
+        results = await Trending(limit=limit)
         elapsed = round(time.time() - start_time, 2)
 
-        results = []
-        for entry in search_results.get("entries", []):
-            results.append({
-                "title": entry.get("title"),
-                "video_id": entry.get("id"),
-                "channel_name": entry.get("uploader"),
-                "duration": entry.get("duration"),
-                "views": entry.get("view_count"),
-                "youtube_link": f"https://youtube.com/watch?v={entry.get('id')}",
-                "thumbnail": entry.get("thumbnails")
-            })
+        return JSONResponse(content={
+            "results": results,
+            "total_results": len(results),
+            "time_taken": f"{elapsed} sec"
+        })
+
+    except Exception as e:
+        elapsed = round(time.time() - start_time, 2)
+        return JSONResponse(
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
+            status_code=400
+        )
+
+
+@app.get("/suggest")
+async def suggest_songs(
+    q: str = Query(..., description="Search query"),
+    limit: int = Query(5, description="Number of suggestions", ge=1, le=20)
+):
+    """Get song suggestions — FREE (no token required)"""
+    start_time = time.time()
+
+    try:
+        from YouTubeMusic.Search import Suggest
+        results = await Suggest(q, limit=limit)
+        elapsed = round(time.time() - start_time, 2)
 
         return JSONResponse(content={
             "query": q,
@@ -471,24 +481,75 @@ async def search_videos(
     except Exception as e:
         elapsed = round(time.time() - start_time, 2)
         return JSONResponse(
-            content={
-                "error": str(e),
-                "time_taken": f"{elapsed} sec"
-            },
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
             status_code=400
         )
+
+
+@app.get("/playlist")
+async def playlist_songs(
+    url: str = Query(..., description="YouTube playlist URL or playlist ID (e.g. PLxxxxxxx, RDxxxxxx)"),
+    token: str = Query(..., description="Your API token"),
+    user_id: int = Depends(require_token)
+):
+    """Get all songs from a YouTube playlist.
+
+    Supports normal playlists (PL...), auto-generated playlists (OL..., UU...),
+    and YouTube Mix playlists (RD...).
+    """
+    start_time = time.time()
+
+    try:
+        from YouTubeMusic.Playlist import get_playlist_songs
+        songs = await get_playlist_songs(url)
+        elapsed = round(time.time() - start_time, 2)
+
+        return JSONResponse(content={
+            "playlist_url": url,
+            "songs": songs,
+            "total_songs": len(songs),
+            "time_taken": f"{elapsed} sec"
+        })
+
+    except ValueError as e:
+        elapsed = round(time.time() - start_time, 2)
+        return JSONResponse(
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
+            status_code=400
+        )
+    except Exception as e:
+        elapsed = round(time.time() - start_time, 2)
+        return JSONResponse(
+            content={"error": str(e), "time_taken": f"{elapsed} sec"},
+            status_code=500
+        )
+
+
+@app.get("/version")
+async def version_info():
+    """Get YouTubeMusic library version info — FREE"""
+    try:
+        from YouTubeMusic.Startup import get_startup_info
+        info = await get_startup_info()
+        return JSONResponse(content=info)
+    except Exception as e:
+        return JSONResponse(
+            content={"error": str(e)},
+            status_code=500
+        )
+
 
 @app.get("/health")
 async def health_check():
     """Quick health check endpoint"""
     return {"status": "ok"}
 
+
 @app.get("/rate-limit-status")
 async def rate_limit_status(token: Optional[str] = Query(None, description="Your API token")):
     """Check current rate limit status"""
     user_id = await get_current_user(token)
     if user_id:
-        # Token-based user
         used = await get_user_request_count(user_id)
         limit = ADMIN_LIMIT if is_admin(user_id) else DAILY_LIMIT
 
@@ -508,25 +569,12 @@ async def rate_limit_status(token: Optional[str] = Query(None, description="Your
             "auth_method": "none"
         }
 
-# Optional: Clear cache endpoint
-@app.post("/clear-cache")
-async def clear_cache():
-    """Clear both info and search caches"""
-    get_cached_info.cache_clear()
-    get_cached_search_results.cache_clear()
-    return {"message": "All caches cleared"}
 
-
-
-
-
-
-
+# ─────────────────────────── Run Services ───────────────────────────
 
 def start_services():
     print("🌐 Starting FastAPI server on http://0.0.0.0:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info",loop="asyncio")
-
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
 
 
 if __name__ == "__main__":
@@ -537,7 +585,6 @@ if __name__ == "__main__":
             telegram_app.run()
         except Exception as e:
             print(f"Bot failed: {e}, API still running...")
-            # Keep main thread alive so the daemon API thread keeps running
             import time as _time
             while True:
                 _time.sleep(3600)

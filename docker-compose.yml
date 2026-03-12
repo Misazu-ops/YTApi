@@ -1,25 +1,17 @@
 services:
-  yt-dlp-api:
+  ytmusic-api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: yt-dlp-api:latest
-    container_name: yt-dlp-api
+    image: ytmusic-api:latest
+    container_name: ytmusic-api
     restart: always
     networks:
       - web
     environment:
-      # Use your desired host/domain and email for Let's Encrypt labels when using a reverse proxy
       - VIRTUAL_HOST=api.nubcoder.com
       - LETSENCRYPT_HOST=api.nubcoder.com
       - LETSENCRYPT_EMAIL=dev@nubcoder.com
-      # If you want to expose the app directly, optionally set HOST and PORT envs here
-      # - HOST=0.0.0.0
-      # - PORT=8000
-    # Uncomment the ports mapping if you want to access the service directly without a reverse-proxy
-    #ports:
-    #  - "8000:8000"
-    # Optional Firefox profile mount for cookie support (read-only)
     volumes:
       - ${HOME}/.mozilla/firefox:/root/.mozilla/firefox:ro
     deploy:
