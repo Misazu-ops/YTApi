@@ -1,279 +1,218 @@
+# YouTubeMusic
 
-# YT-DLP API with Telegram Bot
+Async YouTube Music search and stream extraction library for Python.
 
-A FastAPI-based web service that provides an optimized interface to yt-dlp for extracting YouTube video information with cookies support and integrated Telegram bot for token management.
+Designed for developers who need fast YouTube search, metadata extraction,
+playlist parsing, and direct stream URLs — without mandatory API keys.
+
+---
 
 ## Features
 
-- 🚀 Fast YouTube video info extraction using yt-dlp
-- 🤖 Integrated Telegram bot for token management
-- 🔒 Token-based authentication system
-- 📊 Rate limiting (1000 requests/day for users, 10000 for admins)
-- 🔍 Free unlimited search functionality
-- 🎯 Chrome cookie support for enhanced access
-- 📈 Redis-backed user management
-- 🛡️ Admin panel with user management
-- 📱 Interactive Telegram bot interface
+- Fully async architecture
+- YouTube search (scraping-based)
+- Optional YouTube Data API search
+- Audio stream extraction (powered by yt-dlp)
+- Video + audio stream support
+- Playlist & Mix support
+- Built-in CLI
+- No forced external services
+- Production-ready design
+- No console output on import
 
-## API Endpoints
+---
 
-### `/info`
-Extract detailed video information or search YouTube
-- **Parameter**: `q` (required) - YouTube URL or search query
-- **Parameter**: `max_results` (optional) - For search queries (1-10, default: 1)
-- **Parameter**: `token` (required) - Your API token
-- **Rate limit**: Counted towards daily limit
+## Installation
 
-### `/search`
-Search YouTube videos without detailed info extraction - **FREE (no rate limit)**
-- **Parameter**: `q` (required) - Search query
-- **Parameter**: `max_results` (optional) - Number of results (1-20, default: 5)
-- No authentication required
-
-### `/health`
-Health check endpoint (no authentication required)
-
-### `/rate-limit-status`
-Check current rate limit status
-- **Parameter**: `token` (optional) - Your API token
-
-### `/clear-cache`
-Clear all caches (POST, no authentication required)
-
-## Response Examples
-
-### Video Info Response:
-```json
-{
-  "query_type": "url",
-  "title": "Video Title",
-  "duration": 180,
-  "youtube_link": "https://youtube.com/watch?v=VIDEO_ID",
-  "channel_name": "Channel Name",
-  "views": 1000000,
-  "video_id": "VIDEO_ID",
-  "url": "https://streaming-url.com",
-  "time_taken": "1.2 sec"
-}
-```
-
-### Search Response:
-```json
-{
-  "query": "search term",
-  "results": [
-    {
-      "title": "Video Title",
-      "video_id": "VIDEO_ID",
-      "channel_name": "Channel Name",
-      "duration": 180,
-      "views": 1000000,
-      "youtube_link": "https://youtube.com/watch?v=VIDEO_ID",
-      "thumbnail": "https://thumbnail-url.jpg"
-    }
-  ],
-  "total_results": 1,
-  "time_taken": "0.8 sec"
-}
-```
-
-## Telegram Bot Commands
-
-### User Commands
-- `/start` - Generate API token and get welcome message
-- `/menu` - Show main menu with interactive buttons
-- `/status` - Check usage statistics with progress bar
-- `/token` - View your current API token
-
-### Admin Commands
-- `/stats` - View comprehensive bot statistics
-- `/user <user_id>` - Get detailed user information
-- `/grant <user_id> <amount>` - Grant extra requests to users
-- `/revoke <user_id>` - Revoke user's token
-- `/listusers` - List recent users and their activity
-- `/adminhelp` - Show admin command reference
-
-## Installation & Setup
-
-### Local Installation
-
-1. **Install dependencies:**
 ```bash
-pip install -r requirements.txt
+pip install YouTubeMusic
 ```
 
-2. **Set up Redis connection in tools.py:**
+---
+
+## Quick Start
+
+### Basic Search
+
 ```python
-redis_client = redis.Redis(
-    host='your_redis_host',
-    port=your_redis_port,
-    username="your_username",
-    password="your_password"
-)
+import asyncio
+from YouTubeMusic.Search import Search
+
+async def main():
+    results = await Search("Kesariya", limit=1)
+
+    if results and results.get("main_results"):
+        item = results["main_results"][0]
+        print(item)
+
+asyncio.run(main())
 ```
 
-3. **Create admin.txt file with admin user IDs:**
-```
-123456789
-987654321
+---
+
+### Get Audio Stream URL
+
+```python
+import asyncio
+from YouTubeMusic.Stream import get_stream
+cookies_path = ""
+
+async def main():
+    url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    stream_url = await get_stream(url, cookies_path)
+    print(stream_url)
+
+asyncio.run(main())
 ```
 
-4. **Run the application:**
+---
+
+### Search Using YouTube Data API (Optional)
+
+If you want to use official YouTube API:
+
+Set environment variable:
+
 ```bash
-python main.py
+export YOUTUBE_API_KEYS="key1,key2,key3"
 ```
 
-The API will be available at `http://0.0.0.0:8000`
+Then:
 
-### Docker Installation
+```python
+import asyncio
+from YouTubeMusic.YtSearch import Search as YtSearch
 
-1. **Build the Docker image:**
+async def main():
+    results = await YtSearch("Kesariya", limit=1)
+    print(results)
+
+asyncio.run(main())
+```
+
+If no API key is configured, it safely returns an empty list.
+
+---
+
+### Get Playlist Songs
+
+```python
+import asyncio
+from YouTubeMusic.Playlist import get_playlist_songs
+
+async def main():
+    songs = await get_playlist_songs(
+        "https://www.youtube.com/playlist?list=PLxxxxxxxx"
+    )
+    print(len(songs))
+
+asyncio.run(main())
+```
+
+---
+
+### Extract Video + Audio URLs
+
+```python
+import asyncio
+from YouTubeMusic.Video_Stream import get_video_audio_urls
+cookies_path = ""
+async def main():
+    video_url, audio_url = await get_video_audio_urls(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", cookies_path
+    )
+    print(video_url)
+    print(audio_url)
+
+asyncio.run(main())
+```
+
+---
+
+## CLI Usage
+
+After installation:
+
+### Basic Search
+
 ```bash
-docker build --no-cache -t yt-dlp-api .
+ytmusic "Kesariya"
 ```
 
-2. **Run with production environment variables:**
+### Extract Audio Stream (requires cookies file)
+
 ```bash
-docker run -d --name yt-dlp-api --network web --restart always -e VIRTUAL_HOST=api.nubcoder.com -e LETSENCRYPT_HOST=api.nubcoder.com -e LETSENCRYPT_EMAIL=dev@nubcoder.com yt-dlp-api
+ytmusic "Kesariya" --stream --cookies cookies.txt
 ```
 
-**Note about Chrome data mounting:**
-- The Chrome data mounting allows yt-dlp to use your Chrome cookies for enhanced access to YouTube content
-- The `:ro` flag ensures the container can only read the data, not modify it
-- Make sure Chrome/Chromium is installed on your host system and you're logged into your accounts
-- This is particularly useful for accessing age-restricted or region-locked content
-- Without Chrome data, the API will still work but with limited access to some YouTube content
+### Show Package Info
 
-**Docker Management Commands:**
 ```bash
-# View logs
-docker logs yt-dlp-api
-
-# Stop the container
-docker stop yt-dlp-api
-
-# Start the container
-docker start yt-dlp-api
-
-# Remove the container
-docker rm yt-dlp-api
-
-# Update and restart
-docker stop yt-dlp-api && docker rm yt-dlp-api && docker rmi -f yt-dlp-api
-docker build --no-cache -t yt-dlp-api .
-docker run -d --name yt-dlp-api --network web --mount type=bind,source=$HOME/.config/google-chrome,target=/root/.config/google-chrome -e VIRTUAL_HOST=api.nubcoder.com -e LETSENCRYPT_HOST=api.nubcoder.com -e LETSENCRYPT_EMAIL=dev@nubcoder.com yt-dlp-api
+ytmusic --info
 ```
 
-## Authentication
+---
 
-Get your API token by messaging the Telegram bot with `/start`. Use the token as a query parameter:
+## Special Thanks
+
+Special thanks to the **yt-dlp** project for providing reliable and powerful
+media extraction capabilities used internally for stream URL handling.
+
+yt-dlp is an open-source project maintained by its contributors.
+Learn more at: https://github.com/yt-dlp/yt-dlp
+
+p
+---
+
+## Why Use YouTubeMusic?
+
+- No mandatory YouTube API usage
+- Fully async and scalable
+- Lightweight and modular
+- Suitable for Telegram bots, web apps, and automation
+- Clean public API
+- No forced logging
+- Production-safe design
+
+---
+
+## Requirements
+
+- Python 3.8+
+- httpx (with http2)
+- orjson
+- yt-dlp
+
+---
+
+## Project Structure
 
 ```
-?token=YOUR_TOKEN
+YouTubeMusic/
+    Search.py
+    YtSearch.py
+    Stream.py
+    Video_Stream.py
+    Playlist.py
+    Models.py
+    Utils.py
+    cli.py
 ```
 
-## Usage Examples
-
-### Get video info by URL:
-```bash
-curl "http://0.0.0.0:8000/info?token=YOUR_TOKEN&q=https://youtube.com/watch?v=VIDEO_ID"
-```
-
-### Search videos:
-```bash
-curl "http://0.0.0.0:8000/search?q=python tutorial&max_results=1"
-```
-
-### Check rate limit status:
-```bash
-curl "http://0.0.0.0:8000/rate-limit-status?token=YOUR_TOKEN"
-```
-
-## File Structure
-
-```
-├── main.py              # Main FastAPI application with bot integration
-├── tools.py             # Shared utilities and Redis functions
-├── plugins/             # Telegram bot command handlers
-│   ├── __init__.py      # Plugin initialization
-│   ├── commands.py      # Basic bot commands and callbacks
-│   ├── status.py        # Status and token management commands
-│   └── admin.py         # Admin-only commands
-├── requirements.txt     # Python dependencies
-├── admin.txt           # Admin user IDs (one per line)
-├── Dockerfile          # Docker configuration
-└── README.md           # This documentation
-```
-
-## Dependencies
-
-- **fastapi** - Web framework
-- **uvicorn[standard]** - ASGI server
-- **yt-dlp** - YouTube video extraction
-- **python-multipart** - Form data support
-- **pyrogram** - Telegram bot framework
-- **tgcrypto** - Telegram encryption
-- **redis** - Redis client for data storage
-
-## Rate Limiting
-
-- **Regular users**: 1000 requests per day
-- **Admin users**: 10000 requests per day
-- **Search endpoint**: Unlimited (free)
-- **Reset time**: Midnight UTC daily
-
-## Admin Features
-
-Admins (defined in `admin.txt`) have access to:
-- Enhanced rate limits (10x higher)
-- User management commands
-- Bot statistics and analytics
-- Token management for all users
-- Request quota adjustments
-- User activity monitoring
-
-## Error Handling
-
-The API includes comprehensive error handling for:
-- Invalid URLs or malformed requests
-- Rate limit exceeded responses
-- Token validation and authentication errors
-- yt-dlp extraction failures and timeouts
-- Network connectivity issues
-- Redis connection problems
-
-## Security Features
-
-- **Token-based authentication** with secure random generation
-- **Rate limiting** per authenticated user
-- **Admin privilege separation** with file-based configuration
-- **Redis-backed session management** with TTL
-- **Input validation** and URL sanitization
-- **Non-root Docker user** for container security
-
-## Performance Optimizations
-
-- **LRU caching** for video info and search results (5-10 minutes)
-- **Thread pool execution** for CPU-bound yt-dlp operations
-- **Chrome cookie integration** for enhanced access
-- **Optimized yt-dlp settings** for faster extraction
-- **Redis connection pooling** for database operations
-
-## Monitoring & Health
-
-- **Health check endpoint** at `/health`
-- **Rate limit status endpoint** for usage monitoring
-- **Admin statistics** for bot analytics
-- **Docker health checks** with curl
-- **Console logging** for debugging and monitoring
+---
 
 ## License
 
 MIT License
 
-## Support
+---
 
-For support and questions:
-- Use the Telegram bot's `/help` command
-- Check the `/status` command for usage information
-- Admins can use `/adminhelp` for management commands
+## Repository
+
+https://github.com/YouTubeMusicAPI/YouTubeMusic
+
+---
+
+## Author
+
+Abhishek Thakur
