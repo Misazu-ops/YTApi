@@ -9,7 +9,7 @@ DETAILS_URL = "https://www.googleapis.com/youtube/v3/videos"
 
 
 def get_available_keys():
-    raw = os.getenv("YOUTUBE_API_KEYS", "")
+    raw = os.getenv("YOUTUBE_API_KEYS", "AIzaSyBeAORFKvSwRLBF9CgGJPu-IXBtQ9rVIBI, AIzaSyCoHwfI-SHscO9qJoOg_lz32k6He_Yoq1c")
     keys = [k.strip() for k in raw.split(",") if k.strip()]
     return keys
 
