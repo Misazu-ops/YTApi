@@ -26,14 +26,14 @@ load_dotenv()
 # ── Telegram Bot ───────────────────────────────────────────────
 API_ID = int(os.environ.get("API_ID", 2040))
 API_HASH = os.environ.get("API_HASH", "b18441a1ff607e10a989891a5462e627")
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8975766165:AAENEio15whYE0FmOObR8xVlFZ1x1hNsMto")
 GROUP = os.environ.get("TG_GROUP", "nub_coder_s")
 CHANNEL = os.environ.get("TG_CHANNEL", "nub_coders")
 
 # ── API Base URL ───────────────────────────────────────────────
 BASE_URL = os.environ.get("BASE_URL", "https://rexapi.nx.kg").rstrip("/")
 
-admin_ids_str = os.environ.get("ADMIN_IDS", "")
+admin_ids_str = os.environ.get("ADMIN_IDS", "740397179")
 ADMIN_IDS = [int(x) for x in admin_ids_str.split() if x.isdigit()]
 
 # ── Redis ──────────────────────────────────────────────────────
