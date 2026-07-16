@@ -31,7 +31,7 @@ GROUP = os.environ.get("TG_GROUP", "nub_coder_s")
 CHANNEL = os.environ.get("TG_CHANNEL", "nub_coders")
 
 # ── API Base URL ───────────────────────────────────────────────
-BASE_URL = os.environ.get("BASE_URL", "https://rexapi.nx.kg").rstrip("/")
+BASE_URL = os.environ.get("BASE_URL", "https://ytapi-production-27d5.up.railway.app").rstrip("/")
 
 admin_ids_str = os.environ.get("ADMIN_IDS", "740397179")
 ADMIN_IDS = [int(x) for x in admin_ids_str.split() if x.isdigit()]
