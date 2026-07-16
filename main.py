@@ -421,7 +421,7 @@ async def read_root():
             "/rate-limit-status": "Check your rate limit usage",
         },
         "free_endpoints": ["/search", "/trending", "/suggest", "/health"],
-        "auth": "Get your token from the Telegram bot @ytdlp_nub_bot using /start",
+        "auth": "Get your token from the Telegram bot @DeltaStackApiBot using /start",
         "redirect_note": "Use /stream/redirect and /video-stream/redirect with pytgcall for instant response + background extraction"
     }
 
