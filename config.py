@@ -38,9 +38,9 @@ ADMIN_IDS = [int(x) for x in admin_ids_str.split() if x.isdigit()]
 
 # ── Redis ──────────────────────────────────────────────────────
 REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.environ.get("REDIS_PORT", 15440))
+REDIS_PORT = int(os.environ.get("REDIS_PORT", 45008))
 REDIS_USERNAME = os.environ.get("REDIS_USERNAME", "default")
-REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "mhCVYfIxxiAmzwxDwIPWCAbqeDUTjaAv")
 
 # ── Rate Limits ────────────────────────────────────────────────
 DAILY_LIMIT = int(os.environ.get("DAILY_LIMIT", 1000))
