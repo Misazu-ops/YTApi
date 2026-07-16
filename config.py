@@ -26,9 +26,9 @@ load_dotenv()
 # ── Telegram Bot ───────────────────────────────────────────────
 API_ID = int(os.environ.get("API_ID", 2040))
 API_HASH = os.environ.get("API_HASH", "b18441a1ff607e10a989891a5462e627")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8975766165:AAENEio15whYE0FmOObR8xVlFZ1x1hNsMto")
-GROUP = os.environ.get("TG_GROUP", "nub_coder_s")
-CHANNEL = os.environ.get("TG_CHANNEL", "nub_coders")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8884674089:AAHN2kkJilomGiPdmLn8btYiKM7rVxjQw1Q")
+GROUP = os.environ.get("TG_GROUP", "FeelLikeGawd")
+CHANNEL = os.environ.get("TG_CHANNEL", "FeelLikeGawd")
 
 # ── API Base URL ───────────────────────────────────────────────
 BASE_URL = os.environ.get("BASE_URL", "https://api.deltastack.fun").rstrip("/")
