@@ -31,7 +31,7 @@ GROUP = os.environ.get("TG_GROUP", "nub_coder_s")
 CHANNEL = os.environ.get("TG_CHANNEL", "nub_coders")
 
 # ── API Base URL ───────────────────────────────────────────────
-BASE_URL = os.environ.get("BASE_URL", "https://rexapihost.vercel.app").rstrip("/")
+BASE_URL = os.environ.get("BASE_URL", "https://api.deltastack.fun").rstrip("/")
 
 admin_ids_str = os.environ.get("ADMIN_IDS", "740397179")
 ADMIN_IDS = [int(x) for x in admin_ids_str.split() if x.isdigit()]
